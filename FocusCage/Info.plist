@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>NSFamilyControlsUsageDescription</key>
+	<string>FocusCage needs access to Screen Time to block apps during focus sessions. This allows us to enforce your focus profiles without any bypasses.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>processing</string>
+	</array>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>com.focuscage.app.refresh</string>
+	</array>
+</dict>
+</plist>
