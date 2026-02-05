@@ -84,7 +84,7 @@ struct ActiveProfileView: View {
                         .font(.title3)
                         .foregroundStyle(.red)
                     
-                    Text("Apps Blocked")
+                    Text("Content Blocked")
                         .font(.headline)
                     
                     Spacer()
@@ -92,6 +92,7 @@ struct ActiveProfileView: View {
                 
                 let appCount = profile.blockedApps.applicationTokens.count
                 let categoryCount = profile.blockedApps.categoryTokens.count
+                let websiteCount = profile.blockedWebsites.count
                 
                 HStack(spacing: 24) {
                     VStack {
@@ -108,6 +109,15 @@ struct ActiveProfileView: View {
                             .font(.largeTitle)
                             .fontWeight(.bold)
                         Text("Categories")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    
+                    VStack {
+                        Text("\(websiteCount)")
+                            .font(.largeTitle)
+                            .fontWeight(.bold)
+                        Text("Websites")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
