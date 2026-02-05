@@ -12,6 +12,7 @@ struct FocusProfile: Identifiable, Codable, Equatable {
     var isEnabled: Bool
     var blockedAppsData: Data?
     var blockedCategoriesData: Data?
+    var blockedWebsites: [BlockedWebsite]
     
     init(
         id: UUID = UUID(),
@@ -19,7 +20,8 @@ struct FocusProfile: Identifiable, Codable, Equatable {
         iconName: String = "lock.fill",
         color: ProfileColor = .indigo,
         schedule: ProfileSchedule = ProfileSchedule(),
-        isEnabled: Bool = true
+        isEnabled: Bool = true,
+        blockedWebsites: [BlockedWebsite] = []
     ) {
         self.id = id
         self.name = name
@@ -29,6 +31,7 @@ struct FocusProfile: Identifiable, Codable, Equatable {
         self.isEnabled = isEnabled
         self.blockedAppsData = nil
         self.blockedCategoriesData = nil
+        self.blockedWebsites = blockedWebsites
     }
     
     var blockedApps: FamilyActivitySelection {
@@ -175,4 +178,41 @@ enum ProfileColor: String, Codable, CaseIterable {
         case .pink: return .pink
         }
     }
+}
+
+struct BlockedWebsite: Identifiable, Codable, Equatable, Hashable {
+    let id: UUID
+    var domain: String
+    var displayName: String
+    var iconName: String
+    var isSuggested: Bool
+    
+    init(id: UUID = UUID(), domain: String, displayName: String, iconName: String = "globe", isSuggested: Bool = false) {
+        self.id = id
+        self.domain = domain
+        self.displayName = displayName
+        self.iconName = iconName
+        self.isSuggested = isSuggested
+    }
+    
+    static let suggestions: [BlockedWebsite] = [
+        BlockedWebsite(domain: "youtube.com", displayName: "YouTube", iconName: "play.rectangle.fill", isSuggested: true),
+        BlockedWebsite(domain: "instagram.com", displayName: "Instagram", iconName: "camera.fill", isSuggested: true),
+        BlockedWebsite(domain: "facebook.com", displayName: "Facebook", iconName: "person.2.fill", isSuggested: true),
+        BlockedWebsite(domain: "twitter.com", displayName: "Twitter/X", iconName: "bubble.left.fill", isSuggested: true),
+        BlockedWebsite(domain: "x.com", displayName: "X", iconName: "bubble.left.fill", isSuggested: true),
+        BlockedWebsite(domain: "tiktok.com", displayName: "TikTok", iconName: "music.note", isSuggested: true),
+        BlockedWebsite(domain: "reddit.com", displayName: "Reddit", iconName: "text.bubble.fill", isSuggested: true),
+        BlockedWebsite(domain: "snapchat.com", displayName: "Snapchat", iconName: "camera.viewfinder", isSuggested: true),
+        BlockedWebsite(domain: "pinterest.com", displayName: "Pinterest", iconName: "pin.fill", isSuggested: true),
+        BlockedWebsite(domain: "linkedin.com", displayName: "LinkedIn", iconName: "briefcase.fill", isSuggested: true),
+        BlockedWebsite(domain: "twitch.tv", displayName: "Twitch", iconName: "gamecontroller.fill", isSuggested: true),
+        BlockedWebsite(domain: "discord.com", displayName: "Discord", iconName: "message.fill", isSuggested: true),
+        BlockedWebsite(domain: "netflix.com", displayName: "Netflix", iconName: "tv.fill", isSuggested: true),
+        BlockedWebsite(domain: "hulu.com", displayName: "Hulu", iconName: "tv.fill", isSuggested: true),
+        BlockedWebsite(domain: "disneyplus.com", displayName: "Disney+", iconName: "tv.fill", isSuggested: true),
+        BlockedWebsite(domain: "amazon.com", displayName: "Amazon", iconName: "cart.fill", isSuggested: true),
+        BlockedWebsite(domain: "ebay.com", displayName: "eBay", iconName: "cart.fill", isSuggested: true),
+        BlockedWebsite(domain: "news.ycombinator.com", displayName: "Hacker News", iconName: "newspaper.fill", isSuggested: true),
+    ]
 }

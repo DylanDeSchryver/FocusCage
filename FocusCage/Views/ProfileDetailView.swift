@@ -43,13 +43,15 @@ struct ProfileDetailView: View {
                     .fontWeight(.semibold)
                 }
             }
-            .familyActivityPicker(
-                isPresented: $showingAppPicker,
-                selection: Binding(
-                    get: { profile.blockedApps },
-                    set: { profile.blockedApps = $0 }
+            .sheet(isPresented: $showingAppPicker) {
+                AppSelectionView(
+                    selection: Binding(
+                        get: { profile.blockedApps },
+                        set: { profile.blockedApps = $0 }
+                    ),
+                    blockedWebsites: $profile.blockedWebsites
                 )
-            )
+            }
             .sheet(isPresented: $showingIconPicker) {
                 IconPickerView(selectedIcon: $profile.iconName, selectedColor: $profile.color)
             }
@@ -153,15 +155,16 @@ struct ProfileDetailView: View {
                 showingAppPicker = true
             } label: {
                 HStack {
-                    Label("Select Apps to Block", systemImage: "apps.iphone")
+                    Label("Select Content to Block", systemImage: "apps.iphone")
                     
                     Spacer()
                     
                     let appCount = profile.blockedApps.applicationTokens.count
                     let categoryCount = profile.blockedApps.categoryTokens.count
+                    let websiteCount = profile.blockedWebsites.count
                     
-                    if appCount > 0 || categoryCount > 0 {
-                        Text("\(appCount) apps, \(categoryCount) categories")
+                    if appCount > 0 || categoryCount > 0 || websiteCount > 0 {
+                        Text("\(appCount + categoryCount + websiteCount) items")
                             .foregroundStyle(.secondary)
                     } else {
                         Text("None selected")
@@ -175,9 +178,9 @@ struct ProfileDetailView: View {
             }
             .buttonStyle(.plain)
         } header: {
-            Text("Blocked Apps")
+            Text("Blocked Content")
         } footer: {
-            Text("Selected apps and categories will be completely inaccessible during focus time. There is no way to bypass this block.")
+            Text("Selected apps, categories, and websites will be completely inaccessible during focus time. Website blocking works system-wide across all browsers.")
         }
     }
     

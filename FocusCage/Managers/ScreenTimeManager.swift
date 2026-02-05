@@ -70,22 +70,37 @@ class ScreenTimeManager: ObservableObject {
         store.shield.applicationCategories = selection.categoryTokens.isEmpty ? nil : ShieldSettings.ActivityCategoryPolicy.specific(selection.categoryTokens)
         store.shield.webDomainCategories = selection.categoryTokens.isEmpty ? nil : ShieldSettings.ActivityCategoryPolicy.specific(selection.categoryTokens)
         
-        print("Blocking activated for profile: \(profile.name)")
+        let blockedDomains: Set<WebDomain> = Set(profile.blockedWebsites.map { WebDomain(domain: $0.domain) })
+        if !blockedDomains.isEmpty {
+            store.webContent.blockedByFilter = .specific(blockedDomains)
+        } else {
+            store.webContent.blockedByFilter = nil
+        }
+        
+        print("Blocking activated for profile: \(profile.name) with \(blockedDomains.count) websites")
     }
     
     func deactivateBlocking() {
         store.shield.applications = nil
         store.shield.applicationCategories = nil
         store.shield.webDomainCategories = nil
+        store.webContent.blockedByFilter = nil
         
         print("Blocking deactivated")
     }
     
-    func updateBlocking(with selection: FamilyActivitySelection) {
+    func updateBlocking(with selection: FamilyActivitySelection, websites: [BlockedWebsite] = []) {
         guard isAuthorized else { return }
         
         store.shield.applications = selection.applicationTokens.isEmpty ? nil : selection.applicationTokens
         store.shield.applicationCategories = selection.categoryTokens.isEmpty ? nil : ShieldSettings.ActivityCategoryPolicy.specific(selection.categoryTokens)
+        
+        let blockedDomains: Set<WebDomain> = Set(websites.map { WebDomain(domain: $0.domain) })
+        if !blockedDomains.isEmpty {
+            store.webContent.blockedByFilter = .specific(blockedDomains)
+        } else {
+            store.webContent.blockedByFilter = nil
+        }
     }
     
     func clearAllBlocking() {

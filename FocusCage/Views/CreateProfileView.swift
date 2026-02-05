@@ -11,6 +11,7 @@ struct CreateProfileView: View {
     @State private var color: ProfileColor = .indigo
     @State private var schedule = ProfileSchedule()
     @State private var blockedApps = FamilyActivitySelection()
+    @State private var blockedWebsites: [BlockedWebsite] = []
     @State private var showingAppPicker = false
     @State private var showingIconPicker = false
     @State private var currentStep = 0
@@ -39,7 +40,9 @@ struct CreateProfileView: View {
                     }
                 }
             }
-            .familyActivityPicker(isPresented: $showingAppPicker, selection: $blockedApps)
+            .sheet(isPresented: $showingAppPicker) {
+                AppSelectionView(selection: $blockedApps, blockedWebsites: $blockedWebsites)
+            }
             .sheet(isPresented: $showingIconPicker) {
                 IconPickerView(selectedIcon: $iconName, selectedColor: $color)
             }
@@ -216,11 +219,11 @@ struct CreateProfileView: View {
         ScrollView {
             VStack(spacing: 32) {
                 VStack(spacing: 8) {
-                    Text("Select Apps to Block")
+                    Text("Select Content to Block")
                         .font(.title2)
                         .fontWeight(.bold)
                     
-                    Text("These apps will be completely inaccessible\nduring your focus time")
+                    Text("Choose apps and websites that will be\ncompletely blocked during focus time")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
@@ -235,19 +238,20 @@ struct CreateProfileView: View {
                     VStack(spacing: 4) {
                         let appCount = blockedApps.applicationTokens.count
                         let categoryCount = blockedApps.categoryTokens.count
+                        let websiteCount = blockedWebsites.count
                         
-                        if appCount > 0 || categoryCount > 0 {
-                            Text("\(appCount) apps and \(categoryCount) categories selected")
+                        if appCount > 0 || categoryCount > 0 || websiteCount > 0 {
+                            Text("\(appCount) apps, \(categoryCount) categories, \(websiteCount) websites")
                                 .font(.headline)
                             
                             Text("Tap below to modify selection")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         } else {
-                            Text("No apps selected yet")
+                            Text("No content selected yet")
                                 .font(.headline)
                             
-                            Text("Tap below to select apps to block")
+                            Text("Tap below to select apps and websites to block")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
@@ -258,7 +262,7 @@ struct CreateProfileView: View {
                 Button {
                     showingAppPicker = true
                 } label: {
-                    Label("Choose Apps & Categories", systemImage: "apps.iphone")
+                    Label("Choose Apps & Websites", systemImage: "apps.iphone")
                         .font(.headline)
                         .frame(maxWidth: .infinity)
                         .padding()
@@ -276,7 +280,7 @@ struct CreateProfileView: View {
                             .fontWeight(.semibold)
                     }
                     
-                    Text("Once a focus session starts, blocked apps cannot be accessed. There are no \"take a break\" options or emergency bypasses.")
+                    Text("Once a focus session starts, blocked content cannot be accessed. There are no \"take a break\" options or emergency bypasses.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
@@ -351,7 +355,8 @@ struct CreateProfileView: View {
             name: name.trimmingCharacters(in: .whitespaces),
             iconName: iconName,
             color: color,
-            schedule: schedule
+            schedule: schedule,
+            blockedWebsites: blockedWebsites
         )
         newProfile.blockedApps = blockedApps
         
