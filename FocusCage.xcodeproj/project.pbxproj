@@ -21,6 +21,7 @@
 		A1B2C3D423 /* ActiveProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D424 /* ActiveProfileView.swift */; };
 		A1B2C3D425 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D426 /* SettingsView.swift */; };
 		A1B2C3D429 /* WebsiteSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D430 /* WebsiteSelectionView.swift */; };
+		A1B2C3D431 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A1B2C3D432 /* LaunchScreen.storyboard */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -41,6 +42,7 @@
 		A1B2C3D427 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A1B2C3D428 /* FocusCage.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = FocusCage.entitlements; sourceTree = "<group>"; };
 		A1B2C3D430 /* WebsiteSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebsiteSelectionView.swift; sourceTree = "<group>"; };
+		A1B2C3D432 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -73,6 +75,7 @@
 				A1B2C3D406 /* Assets.xcassets */,
 				A1B2C3D427 /* Info.plist */,
 				A1B2C3D428 /* FocusCage.entitlements */,
+				A1B2C3D432 /* LaunchScreen.storyboard */,
 			);
 			path = FocusCage;
 			sourceTree = "<group>";
@@ -176,6 +179,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A1B2C3D405 /* Assets.xcassets in Resources */,
+				A1B2C3D431 /* LaunchScreen.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
