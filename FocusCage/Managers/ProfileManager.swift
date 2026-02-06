@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import DeviceActivity
 
 class ProfileManager: ObservableObject {
     @Published var profiles: [FocusProfile] = []
@@ -7,11 +8,13 @@ class ProfileManager: ObservableObject {
     
     private let profilesKey = "focuscage_profiles"
     private let activeProfileKey = "focuscage_active_profile"
+    private let activityCenter = DeviceActivityCenter()
     private var timer: Timer?
     
     init() {
         loadProfiles()
         startScheduleMonitor()
+        scheduleAllProfiles()
     }
     
     deinit {
@@ -23,7 +26,7 @@ class ProfileManager: ObservableObject {
             do {
                 profiles = try JSONDecoder().decode([FocusProfile].self, from: data)
             } catch {
-                print("Failed to load profiles: \(error)")
+                print("[ProfileManager] Failed to load profiles: \(error)")
                 profiles = []
             }
         }
@@ -32,6 +35,9 @@ class ProfileManager: ObservableObject {
            let activeId = UUID(uuidString: activeIdString) {
             activeProfileId = activeId
         }
+        
+        // Always sync to shared storage for the extension
+        SharedDefaults.saveProfiles(profiles)
     }
     
     func saveProfiles() {
@@ -39,7 +45,7 @@ class ProfileManager: ObservableObject {
             let data = try JSONEncoder().encode(profiles)
             UserDefaults.standard.set(data, forKey: profilesKey)
         } catch {
-            print("Failed to save profiles: \(error)")
+            print("[ProfileManager] Failed to save profiles: \(error)")
         }
         
         if let activeId = activeProfileId {
@@ -47,6 +53,12 @@ class ProfileManager: ObservableObject {
         } else {
             UserDefaults.standard.removeObject(forKey: activeProfileKey)
         }
+        
+        // Sync to shared storage for the extension
+        SharedDefaults.saveProfiles(profiles)
+        
+        // Re-schedule all profiles when data changes
+        scheduleAllProfiles()
     }
     
     func addProfile(_ profile: FocusProfile) {
@@ -62,6 +74,10 @@ class ProfileManager: ObservableObject {
     }
     
     func deleteProfile(_ profile: FocusProfile) {
+        // Stop monitoring this profile
+        let activityName = DeviceActivityName(profile.id.uuidString)
+        activityCenter.stopMonitoring([activityName])
+        
         profiles.removeAll { $0.id == profile.id }
         if activeProfileId == profile.id {
             activeProfileId = nil
@@ -85,10 +101,48 @@ class ProfileManager: ObservableObject {
         profiles.filter { $0.isEnabled && $0.schedule.isActiveNow() }
     }
     
+    // MARK: - DeviceActivity Scheduling
+    
+    func scheduleAllProfiles() {
+        // Stop all existing monitoring first
+        activityCenter.stopMonitoring()
+        
+        for profile in profiles where profile.isEnabled {
+            scheduleProfile(profile)
+        }
+        
+        print("[ProfileManager] Scheduled \(profiles.filter { $0.isEnabled }.count) profiles with DeviceActivityCenter")
+    }
+    
+    private func scheduleProfile(_ profile: FocusProfile) {
+        let activityName = DeviceActivityName(profile.id.uuidString)
+        
+        let startHour = profile.schedule.startTime.hour ?? 0
+        let startMinute = profile.schedule.startTime.minute ?? 0
+        let endHour = profile.schedule.endTime.hour ?? 0
+        let endMinute = profile.schedule.endTime.minute ?? 0
+        
+        let schedule = DeviceActivitySchedule(
+            intervalStart: DateComponents(hour: startHour, minute: startMinute),
+            intervalEnd: DateComponents(hour: endHour, minute: endMinute),
+            repeats: true
+        )
+        
+        do {
+            try activityCenter.startMonitoring(activityName, during: schedule)
+            print("[ProfileManager] Scheduled monitoring for '\(profile.name)' (\(startHour):\(String(format: "%02d", startMinute)) - \(endHour):\(String(format: "%02d", endMinute)))")
+        } catch {
+            print("[ProfileManager] Failed to schedule monitoring for '\(profile.name)': \(error)")
+        }
+    }
+    
+    // MARK: - Foreground Schedule Monitor (belt-and-suspenders)
+    
     func startScheduleMonitor() {
-        timer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { [weak self] _ in
+        timer = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { [weak self] _ in
             self?.checkSchedules()
         }
+        // Immediate check on startup
         checkSchedules()
     }
     
@@ -98,12 +152,24 @@ class ProfileManager: ObservableObject {
         if let firstActive = nowActive.first {
             if activeProfileId != firstActive.id {
                 activeProfileId = firstActive.id
+                saveActiveState()
                 NotificationCenter.default.post(name: .profileActivated, object: firstActive)
+                print("[ProfileManager] Profile activated: \(firstActive.name)")
             }
         } else if activeProfileId != nil {
             let previousId = activeProfileId
             activeProfileId = nil
+            saveActiveState()
             NotificationCenter.default.post(name: .profileDeactivated, object: previousId)
+            print("[ProfileManager] Profile deactivated")
+        }
+    }
+    
+    private func saveActiveState() {
+        if let activeId = activeProfileId {
+            UserDefaults.standard.set(activeId.uuidString, forKey: activeProfileKey)
+        } else {
+            UserDefaults.standard.removeObject(forKey: activeProfileKey)
         }
     }
     

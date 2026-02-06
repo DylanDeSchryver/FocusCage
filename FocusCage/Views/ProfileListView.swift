@@ -80,6 +80,8 @@ struct ProfileListView: View {
                     Button(role: .destructive) {
                         withAnimation {
                             profileManager.deleteProfile(profile)
+                            profileManager.checkSchedules()
+                            screenTimeManager.syncBlockingState(with: profileManager.profiles)
                         }
                     } label: {
                         Label("Delete", systemImage: "trash")
@@ -88,6 +90,8 @@ struct ProfileListView: View {
                 .swipeActions(edge: .leading) {
                     Button {
                         profileManager.toggleProfile(profile)
+                        profileManager.checkSchedules()
+                        screenTimeManager.syncBlockingState(with: profileManager.profiles)
                     } label: {
                         Label(
                             profile.isEnabled ? "Disable" : "Enable",

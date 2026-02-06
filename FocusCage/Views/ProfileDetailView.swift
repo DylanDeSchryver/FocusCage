@@ -35,9 +35,8 @@ struct ProfileDetailView: View {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Save") {
                         profileManager.updateProfile(profile)
-                        if profileManager.activeProfileId == profile.id {
-                            screenTimeManager.activateBlocking(for: profile)
-                        }
+                        profileManager.checkSchedules()
+                        screenTimeManager.syncBlockingState(with: profileManager.profiles)
                         dismiss()
                     }
                     .fontWeight(.semibold)

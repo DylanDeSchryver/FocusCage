@@ -58,9 +58,28 @@ class ScreenTimeManager: ObservableObject {
             .store(in: &cancellables)
     }
     
+    /// Called on every foreground event to ensure blocking state matches schedules.
+    /// This is a belt-and-suspenders approach alongside the DeviceActivityMonitor extension.
+    func syncBlockingState(with profiles: [FocusProfile]) {
+        guard isAuthorized else {
+            print("[ScreenTimeManager] syncBlockingState skipped: not authorized")
+            return
+        }
+        
+        let activeProfiles = profiles.filter { $0.isEnabled && $0.schedule.isActiveNow() }
+        
+        if let activeProfile = activeProfiles.first {
+            activateBlocking(for: activeProfile)
+            print("[ScreenTimeManager] Foreground sync: blocking active for '\(activeProfile.name)'")
+        } else {
+            deactivateBlocking()
+            print("[ScreenTimeManager] Foreground sync: no active profile, blocking cleared")
+        }
+    }
+    
     func activateBlocking(for profile: FocusProfile) {
         guard isAuthorized else {
-            print("Cannot activate blocking: not authorized")
+            print("[ScreenTimeManager] Cannot activate blocking: not authorized")
             return
         }
         
@@ -77,7 +96,7 @@ class ScreenTimeManager: ObservableObject {
             store.webContent.blockedByFilter = nil
         }
         
-        print("Blocking activated for profile: \(profile.name) with \(blockedDomains.count) websites")
+        print("[ScreenTimeManager] Blocking activated for profile: \(profile.name)")
     }
     
     func deactivateBlocking() {
@@ -86,7 +105,7 @@ class ScreenTimeManager: ObservableObject {
         store.shield.webDomainCategories = nil
         store.webContent.blockedByFilter = nil
         
-        print("Blocking deactivated")
+        print("[ScreenTimeManager] Blocking deactivated")
     }
     
     func updateBlocking(with selection: FamilyActivitySelection, websites: [BlockedWebsite] = []) {
