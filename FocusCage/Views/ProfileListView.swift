@@ -5,6 +5,8 @@ struct ProfileListView: View {
     @EnvironmentObject var screenTimeManager: ScreenTimeManager
     @State private var showingCreateProfile = false
     @State private var profileToEdit: FocusProfile?
+    @State private var showingNuclearSheet = false
+    @State private var nuclearProfile: FocusProfile?
     
     var body: some View {
         NavigationStack {
@@ -31,6 +33,11 @@ struct ProfileListView: View {
             }
             .sheet(item: $profileToEdit) { profile in
                 ProfileDetailView(profile: profile)
+            }
+            .sheet(isPresented: $showingNuclearSheet) {
+                if let nuclearProfile {
+                    NuclearButtonSheet(profile: nuclearProfile)
+                }
             }
         }
     }
@@ -88,21 +95,87 @@ struct ProfileListView: View {
                     }
                 }
                 .swipeActions(edge: .leading) {
-                    Button {
-                        profileManager.toggleProfile(profile)
-                        profileManager.checkSchedules()
-                        screenTimeManager.syncBlockingState(with: profileManager.profiles)
-                    } label: {
-                        Label(
-                            profile.isEnabled ? "Disable" : "Enable",
-                            systemImage: profile.isEnabled ? "pause" : "play"
-                        )
+                    if profileManager.canFreelyDisable(profile) {
+                        Button {
+                            profileManager.toggleProfile(profile)
+                            profileManager.checkSchedules()
+                            screenTimeManager.syncBlockingState(with: profileManager.profiles)
+                        } label: {
+                            Label(
+                                profile.isEnabled ? "Disable" : "Enable",
+                                systemImage: profile.isEnabled ? "pause" : "play"
+                            )
+                        }
+                        .tint(profile.isEnabled ? .orange : .green)
                     }
-                    .tint(profile.isEnabled ? .orange : .green)
                 }
             }
+            
+            nuclearButtonSection
         }
         .listStyle(.insetGrouped)
+    }
+    
+    private var nuclearButtonSection: some View {
+        Section {
+            if profileManager.isNuclearActive {
+                HStack(spacing: 12) {
+                    Image(systemName: "bolt.circle.fill")
+                        .font(.title2)
+                        .foregroundStyle(.red)
+                    
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Nuclear Mode Active")
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+                        
+                        if let endDate = profileManager.nuclearEndDate {
+                            Text("Ends at \(endDate, style: .time)")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    
+                    Spacer()
+                    
+                    Image(systemName: "lock.fill")
+                        .foregroundStyle(.red)
+                }
+                .padding(.vertical, 4)
+            } else if !profileManager.profiles.isEmpty {
+                Button {
+                    // Use the first profile with blocked content for nuclear
+                    if let firstProfile = profileManager.profiles.first {
+                        nuclearProfile = firstProfile
+                        showingNuclearSheet = true
+                    }
+                } label: {
+                    HStack(spacing: 12) {
+                        Image(systemName: "bolt.circle.fill")
+                            .font(.title2)
+                            .foregroundStyle(.red)
+                        
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Nuclear Button")
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                                .foregroundStyle(.primary)
+                            
+                            Text("Instantly block everything for 1 hour")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        
+                        Spacer()
+                        
+                        Image(systemName: "chevron.right")
+                            .font(.caption)
+                            .foregroundStyle(.tertiary)
+                    }
+                }
+                .padding(.vertical, 4)
+            }
+        }
     }
     
     private var authorizationBanner: some View {
@@ -210,6 +283,10 @@ struct ProfileRow: View {
                     Image(systemName: "pause.circle.fill")
                         .font(.title2)
                         .foregroundStyle(.orange)
+                } else {
+                    Image(systemName: profile.strictnessLevel.iconName)
+                        .font(.caption)
+                        .foregroundStyle(strictnessBadgeColor)
                 }
                 
                 Image(systemName: "chevron.right")
@@ -219,6 +296,14 @@ struct ProfileRow: View {
             .padding(.vertical, 8)
         }
         .buttonStyle(.plain)
+    }
+    
+    private var strictnessBadgeColor: Color {
+        switch profile.strictnessLevel {
+        case .standard: return .gray
+        case .strict: return .orange
+        case .locked: return .red
+        }
     }
 }
 

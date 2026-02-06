@@ -26,6 +26,8 @@
 		E1E2E3E4A1 /* DeviceActivityMonitorExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1E2E3E4A2 /* DeviceActivityMonitorExtension.swift */; };
 		E1E2E3E4A3 /* FocusProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D408 /* FocusProfile.swift */; };
 		E1E2E3E4A4 /* SharedDefaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1E2E3E4A9 /* SharedDefaults.swift */; };
+		F1F2F3F401 /* CooldownSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1F2F3F402 /* CooldownSheet.swift */; };
+		F1F2F3F403 /* NuclearButtonSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1F2F3F404 /* NuclearButtonSheet.swift */; };
 		E1E2E3E4BF /* FocusCageMonitor.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = E1E2E3E4A8 /* FocusCageMonitor.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
@@ -77,6 +79,8 @@
 		E1E2E3E4A6 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		E1E2E3E4A7 /* FocusCageMonitor.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = FocusCageMonitor.entitlements; sourceTree = "<group>"; };
 		E1E2E3E4A8 /* FocusCageMonitor.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = FocusCageMonitor.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		F1F2F3F402 /* CooldownSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CooldownSheet.swift; sourceTree = "<group>"; };
+		F1F2F3F404 /* NuclearButtonSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NuclearButtonSheet.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -160,6 +164,8 @@
 				A1B2C3D424 /* ActiveProfileView.swift */,
 				A1B2C3D426 /* SettingsView.swift */,
 				A1B2C3D430 /* WebsiteSelectionView.swift */,
+				F1F2F3F402 /* CooldownSheet.swift */,
+				F1F2F3F404 /* NuclearButtonSheet.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -288,6 +294,8 @@
 				A1B2C3D425 /* SettingsView.swift in Sources */,
 				A1B2C3D429 /* WebsiteSelectionView.swift in Sources */,
 				E1E2E3E4A5 /* SharedDefaults.swift in Sources */,
+				F1F2F3F401 /* CooldownSheet.swift in Sources */,
+				F1F2F3F403 /* NuclearButtonSheet.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

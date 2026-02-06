@@ -66,7 +66,14 @@ class ScreenTimeManager: ObservableObject {
             return
         }
         
-        let activeProfiles = profiles.filter { $0.isEnabled && $0.schedule.isActiveNow() }
+        let activeProfiles = profiles.filter { profile in
+            guard profile.isEnabled && profile.schedule.isActiveNow() else { return false }
+            // Check if temporarily unlocked
+            if let unlockEnd = profile.temporaryUnlockEndDate, Date() < unlockEnd {
+                return false
+            }
+            return true
+        }
         
         if let activeProfile = activeProfiles.first {
             activateBlocking(for: activeProfile)

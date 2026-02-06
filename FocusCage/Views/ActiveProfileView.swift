@@ -4,6 +4,9 @@ struct ActiveProfileView: View {
     @EnvironmentObject var profileManager: ProfileManager
     @EnvironmentObject var screenTimeManager: ScreenTimeManager
     @State private var currentTime = Date()
+    @State private var showingCooldownSheet = false
+    @State private var showingNuclearSheet = false
+    @State private var nuclearProfile: FocusProfile?
     
     let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     
@@ -24,6 +27,16 @@ struct ActiveProfileView: View {
             .navigationTitle("Active Session")
             .onReceive(timer) { _ in
                 currentTime = Date()
+            }
+            .sheet(isPresented: $showingCooldownSheet) {
+                if let activeProfile = profileManager.activeProfile {
+                    CooldownSheet(profile: activeProfile)
+                }
+            }
+            .sheet(isPresented: $showingNuclearSheet) {
+                if let nuclearProfile {
+                    NuclearButtonSheet(profile: nuclearProfile)
+                }
             }
         }
     }
@@ -128,28 +141,112 @@ struct ActiveProfileView: View {
             .background(Color(.systemGray6))
             .clipShape(RoundedRectangle(cornerRadius: 16))
             
+            strictnessCard(for: profile)
+        }
+        .padding()
+        .background(Color(.systemBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 24))
+        .shadow(color: .black.opacity(0.05), radius: 20, y: 10)
+    }
+    
+    @ViewBuilder
+    private func strictnessCard(for profile: FocusProfile) -> some View {
+        switch profile.strictnessLevel {
+        case .standard:
             VStack(spacing: 8) {
                 HStack(spacing: 4) {
-                    Image(systemName: "hand.raised.fill")
-                        .foregroundStyle(.orange)
-                    Text("No Bypass Available")
+                    Image(systemName: "lock.open.fill")
+                        .foregroundStyle(.green)
+                    Text("Standard Mode")
                         .font(.headline)
                 }
                 
-                Text("Stay focused. Blocked apps will become available when your session ends at \(profile.schedule.endTimeString).")
+                Text("You can disable this profile at any time from the profile settings.")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
             }
             .padding()
             .frame(maxWidth: .infinity)
+            .background(Color.green.opacity(0.1))
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+            
+        case .strict:
+            VStack(spacing: 12) {
+                HStack(spacing: 4) {
+                    Image(systemName: "shield.fill")
+                        .foregroundStyle(.orange)
+                    Text("Strict Mode")
+                        .font(.headline)
+                }
+                
+                let remaining = profileManager.remainingUnlocks(for: profile)
+                
+                if profileManager.isTemporarilyUnlocked(profile) {
+                    VStack(spacing: 4) {
+                        Text("Temporarily Unlocked")
+                            .font(.subheadline)
+                            .foregroundStyle(.green)
+                            .fontWeight(.semibold)
+                        if let endDate = profile.temporaryUnlockEndDate {
+                            Text("Blocking resumes at \(endDate, style: .time)")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                } else if remaining > 0 {
+                    Button {
+                        if profileManager.requestUnlock(for: profile.id) {
+                            showingCooldownSheet = true
+                        }
+                    } label: {
+                        HStack {
+                            Image(systemName: "lock.open.fill")
+                            Text("Emergency Unlock")
+                                .fontWeight(.semibold)
+                        }
+                        .font(.subheadline)
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 10)
+                        .background(Color.orange)
+                        .foregroundStyle(.white)
+                        .clipShape(Capsule())
+                    }
+                    
+                    Text("\(remaining) of \(profile.strictnessLevel.maxDailyUnlocks) unlocks remaining this session")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                } else {
+                    Text("No unlocks remaining. Stay focused until \(profile.schedule.endTimeString).")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+            }
+            .padding()
+            .frame(maxWidth: .infinity)
             .background(Color.orange.opacity(0.1))
             .clipShape(RoundedRectangle(cornerRadius: 16))
+            
+        case .locked:
+            VStack(spacing: 8) {
+                HStack(spacing: 4) {
+                    Image(systemName: "lock.fill")
+                        .foregroundStyle(.red)
+                    Text("Full Lockdown")
+                        .font(.headline)
+                }
+                
+                Text("This profile cannot be bypassed. Blocking ends at \(profile.schedule.endTimeString).")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+            .padding()
+            .frame(maxWidth: .infinity)
+            .background(Color.red.opacity(0.1))
+            .clipShape(RoundedRectangle(cornerRadius: 16))
         }
-        .padding()
-        .background(Color(.systemBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 24))
-        .shadow(color: .black.opacity(0.05), radius: 20, y: 10)
     }
     
     private var noActiveProfileView: some View {
@@ -178,6 +275,48 @@ struct ActiveProfileView: View {
             Text(currentTime, style: .time)
                 .font(.system(size: 48, weight: .light, design: .rounded))
                 .foregroundStyle(.secondary)
+            
+            if !profileManager.profiles.isEmpty && !profileManager.isNuclearActive {
+                Button {
+                    if let firstProfile = profileManager.profiles.first {
+                        nuclearProfile = firstProfile
+                        showingNuclearSheet = true
+                    }
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: "bolt.fill")
+                        Text("Nuclear Button")
+                            .fontWeight(.semibold)
+                    }
+                    .font(.subheadline)
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 12)
+                    .background(Color.red)
+                    .foregroundStyle(.white)
+                    .clipShape(Capsule())
+                }
+            }
+            
+            if profileManager.isNuclearActive {
+                VStack(spacing: 4) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "bolt.circle.fill")
+                            .foregroundStyle(.red)
+                        Text("Nuclear Mode Active")
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+                    }
+                    if let endDate = profileManager.nuclearEndDate {
+                        Text("Ends at \(endDate, style: .time)")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .padding()
+                .frame(maxWidth: .infinity)
+                .background(Color.red.opacity(0.1))
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+            }
         }
         .padding(32)
         .frame(maxWidth: .infinity)

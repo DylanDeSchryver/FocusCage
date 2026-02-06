@@ -13,6 +13,12 @@ struct FocusProfile: Identifiable, Codable, Equatable {
     var blockedAppsData: Data?
     var blockedCategoriesData: Data?
     var blockedWebsites: [BlockedWebsite]
+    var strictnessLevel: StrictnessLevel
+    var dailyUnlocksUsed: Int
+    var lastUnlockResetDate: Date?
+    var cooldownEndDate: Date?
+    var nuclearButtonEndDate: Date?
+    var temporaryUnlockEndDate: Date?
     
     init(
         id: UUID = UUID(),
@@ -21,7 +27,8 @@ struct FocusProfile: Identifiable, Codable, Equatable {
         color: ProfileColor = .indigo,
         schedule: ProfileSchedule = ProfileSchedule(),
         isEnabled: Bool = true,
-        blockedWebsites: [BlockedWebsite] = []
+        blockedWebsites: [BlockedWebsite] = [],
+        strictnessLevel: StrictnessLevel = .strict
     ) {
         self.id = id
         self.name = name
@@ -32,6 +39,12 @@ struct FocusProfile: Identifiable, Codable, Equatable {
         self.blockedAppsData = nil
         self.blockedCategoriesData = nil
         self.blockedWebsites = blockedWebsites
+        self.strictnessLevel = strictnessLevel
+        self.dailyUnlocksUsed = 0
+        self.lastUnlockResetDate = nil
+        self.cooldownEndDate = nil
+        self.nuclearButtonEndDate = nil
+        self.temporaryUnlockEndDate = nil
     }
     
     var blockedApps: FamilyActivitySelection {
@@ -156,6 +169,62 @@ enum Weekday: Int, Codable, CaseIterable, Identifiable {
         case .thursday: return "T"
         case .friday: return "F"
         case .saturday: return "S"
+        }
+    }
+}
+
+enum StrictnessLevel: String, Codable, CaseIterable, Identifiable {
+    case standard
+    case strict
+    case locked
+    
+    var id: String { rawValue }
+    
+    var displayName: String {
+        switch self {
+        case .standard: return "Standard"
+        case .strict: return "Strict"
+        case .locked: return "Locked"
+        }
+    }
+    
+    var description: String {
+        switch self {
+        case .standard: return "You can freely disable blocking at any time."
+        case .strict: return "Disabling requires a 10-minute cooldown. Max 2 unlocks per session, 15 minutes each."
+        case .locked: return "Blocking cannot be disabled during scheduled time. No exceptions."
+        }
+    }
+    
+    var iconName: String {
+        switch self {
+        case .standard: return "lock.open.fill"
+        case .strict: return "shield.fill"
+        case .locked: return "lock.fill"
+        }
+    }
+    
+    var maxDailyUnlocks: Int {
+        switch self {
+        case .standard: return .max
+        case .strict: return 2
+        case .locked: return 0
+        }
+    }
+    
+    var cooldownDuration: TimeInterval {
+        switch self {
+        case .standard: return 0
+        case .strict: return 10 * 60 // 10 minutes
+        case .locked: return 0
+        }
+    }
+    
+    var unlockDuration: TimeInterval {
+        switch self {
+        case .standard: return .infinity
+        case .strict: return 15 * 60 // 15 minutes
+        case .locked: return 0
         }
     }
 }

@@ -10,6 +10,24 @@ struct ProfileDetailView: View {
     @State private var showingAppPicker = false
     @State private var showingIconPicker = false
     @State private var showingDeleteConfirmation = false
+    @State private var showingCooldownSheet = false
+    @State private var showingLockedDeleteCooldown = false
+    @State private var lockedDeleteCountdown: Int = 300
+    @State private var canConfirmLockedDelete = false
+    
+    private let deleteTimer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+    
+    private var isActiveLockedProfile: Bool {
+        profile.strictnessLevel == .locked &&
+        profile.schedule.isActiveNow() &&
+        profileManager.activeProfileId == profile.id
+    }
+    
+    private var isActiveStrictProfile: Bool {
+        profile.strictnessLevel == .strict &&
+        profile.schedule.isActiveNow() &&
+        profileManager.activeProfileId == profile.id
+    }
     
     init(profile: FocusProfile) {
         _profile = State(initialValue: profile)
@@ -19,8 +37,12 @@ struct ProfileDetailView: View {
         NavigationStack {
             Form {
                 profileInfoSection
+                strictnessSection
                 scheduleSection
                 blockedAppsSection
+                if isActiveLockedProfile {
+                    lockedEditNotice
+                }
                 dangerZoneSection
             }
             .navigationTitle("Edit Profile")
@@ -54,6 +76,17 @@ struct ProfileDetailView: View {
             .sheet(isPresented: $showingIconPicker) {
                 IconPickerView(selectedIcon: $profile.iconName, selectedColor: $profile.color)
             }
+            .sheet(isPresented: $showingCooldownSheet) {
+                CooldownSheet(profile: profile)
+            }
+            .sheet(isPresented: $showingLockedDeleteCooldown) {
+                LockedDeleteCooldownSheet(profile: profile) {
+                    profileManager.deleteProfile(profile)
+                    profileManager.checkSchedules()
+                    screenTimeManager.syncBlockingState(with: profileManager.profiles)
+                    dismiss()
+                }
+            }
             .confirmationDialog(
                 "Delete Profile",
                 isPresented: $showingDeleteConfirmation,
@@ -61,6 +94,8 @@ struct ProfileDetailView: View {
             ) {
                 Button("Delete", role: .destructive) {
                     profileManager.deleteProfile(profile)
+                    profileManager.checkSchedules()
+                    screenTimeManager.syncBlockingState(with: profileManager.profiles)
                     dismiss()
                 }
             } message: {
@@ -93,11 +128,53 @@ struct ProfileDetailView: View {
             }
             .padding(.vertical, 8)
             
-            Toggle("Profile Enabled", isOn: $profile.isEnabled)
+            if isActiveLockedProfile {
+                HStack {
+                    Image(systemName: "lock.fill")
+                        .foregroundStyle(.red)
+                    Text("Cannot be disabled during active session")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+            } else if isActiveStrictProfile {
+                Button {
+                    if profileManager.remainingUnlocks(for: profile) > 0 {
+                        if profileManager.requestUnlock(for: profile.id) {
+                            showingCooldownSheet = true
+                        }
+                    }
+                } label: {
+                    HStack {
+                        Image(systemName: "shield.fill")
+                            .foregroundStyle(.orange)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Request Emergency Unlock")
+                                .font(.subheadline)
+                            let remaining = profileManager.remainingUnlocks(for: profile)
+                            Text("\(remaining) of \(profile.strictnessLevel.maxDailyUnlocks) unlocks remaining")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.caption)
+                            .foregroundStyle(.tertiary)
+                    }
+                }
+                .disabled(profileManager.remainingUnlocks(for: profile) <= 0)
+            } else {
+                Toggle("Profile Enabled", isOn: $profile.isEnabled)
+            }
         } header: {
             Text("Profile")
         } footer: {
-            Text("When disabled, this profile will not activate during its scheduled time.")
+            if isActiveLockedProfile {
+                Text("This profile uses Locked strictness and cannot be disabled during its scheduled time.")
+            } else if isActiveStrictProfile {
+                Text("This profile uses Strict strictness. You can request a temporary unlock with a 10-minute cooldown.")
+            } else {
+                Text("When disabled, this profile will not activate during its scheduled time.")
+            }
         }
     }
     
@@ -183,10 +260,54 @@ struct ProfileDetailView: View {
         }
     }
     
+    private var strictnessSection: some View {
+        Section {
+            if isActiveLockedProfile {
+                HStack {
+                    Image(systemName: profile.strictnessLevel.iconName)
+                        .foregroundStyle(profile.color.color)
+                    Text(profile.strictnessLevel.displayName)
+                        .font(.subheadline)
+                    Spacer()
+                    Text("Cannot change during active session")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            } else {
+                Picker("Strictness Level", selection: $profile.strictnessLevel) {
+                    ForEach(StrictnessLevel.allCases) { level in
+                        Label(level.displayName, systemImage: level.iconName)
+                            .tag(level)
+                    }
+                }
+            }
+        } header: {
+            Text("Strictness")
+        } footer: {
+            Text(profile.strictnessLevel.description)
+        }
+    }
+    
+    private var lockedEditNotice: some View {
+        Section {
+            HStack(spacing: 12) {
+                Image(systemName: "info.circle.fill")
+                    .foregroundStyle(.blue)
+                Text("Schedule and blocked content changes will take effect after the current session ends.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+    
     private var dangerZoneSection: some View {
         Section {
             Button(role: .destructive) {
-                showingDeleteConfirmation = true
+                if isActiveLockedProfile {
+                    showingLockedDeleteCooldown = true
+                } else {
+                    showingDeleteConfirmation = true
+                }
             } label: {
                 HStack {
                     Spacer()
@@ -195,6 +316,107 @@ struct ProfileDetailView: View {
                 }
             }
         }
+    }
+}
+
+struct LockedDeleteCooldownSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    
+    let profile: FocusProfile
+    let onDelete: () -> Void
+    
+    @State private var timeRemaining: Int = 300 // 5 minutes
+    @State private var canDelete = false
+    
+    private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+    
+    var body: some View {
+        VStack(spacing: 32) {
+            Spacer()
+            
+            ZStack {
+                Circle()
+                    .fill(Color.red.opacity(0.15))
+                    .frame(width: 120, height: 120)
+                
+                Image(systemName: "trash.circle.fill")
+                    .font(.system(size: 60))
+                    .foregroundStyle(.red)
+            }
+            
+            VStack(spacing: 8) {
+                Text("Delete Locked Profile")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                
+                Text("This profile is currently active and locked.\nDeleting it will immediately remove all blocking.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                
+                if !canDelete {
+                    Text("You must wait before confirming deletion.")
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                        .padding(.top, 4)
+                }
+            }
+            
+            if !canDelete {
+                Text(deleteTimeString)
+                    .font(.system(size: 48, weight: .light, design: .rounded))
+                    .monospacedDigit()
+                    .foregroundStyle(.red)
+            }
+            
+            Spacer()
+            
+            VStack(spacing: 12) {
+                Button(role: .destructive) {
+                    onDelete()
+                    dismiss()
+                } label: {
+                    Text(canDelete ? "Delete Profile" : "Wait \(deleteTimeString)...")
+                        .font(.headline)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(canDelete ? Color.red : Color.gray)
+                        .foregroundStyle(.white)
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                }
+                .disabled(!canDelete)
+                
+                Button {
+                    dismiss()
+                } label: {
+                    Text("Cancel")
+                        .font(.headline)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color(.systemGray5))
+                        .foregroundStyle(.primary)
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                }
+            }
+        }
+        .padding(24)
+        .interactiveDismissDisabled()
+        .onReceive(timer) { _ in
+            if timeRemaining > 0 {
+                timeRemaining -= 1
+                if timeRemaining <= 0 {
+                    withAnimation {
+                        canDelete = true
+                    }
+                }
+            }
+        }
+    }
+    
+    private var deleteTimeString: String {
+        let minutes = timeRemaining / 60
+        let seconds = timeRemaining % 60
+        return String(format: "%d:%02d", minutes, seconds)
     }
 }
 

@@ -12,6 +12,7 @@ struct CreateProfileView: View {
     @State private var schedule = ProfileSchedule()
     @State private var blockedApps = FamilyActivitySelection()
     @State private var blockedWebsites: [BlockedWebsite] = []
+    @State private var strictnessLevel: StrictnessLevel = .strict
     @State private var showingAppPicker = false
     @State private var showingIconPicker = false
     @State private var currentStep = 0
@@ -25,6 +26,7 @@ struct CreateProfileView: View {
                     nameStep.tag(0)
                     scheduleStep.tag(1)
                     appsStep.tag(2)
+                    strictnessStep.tag(3)
                 }
                 .tabViewStyle(.page(indexDisplayMode: .never))
                 .animation(.easeInOut, value: currentStep)
@@ -51,7 +53,7 @@ struct CreateProfileView: View {
     
     private var stepIndicator: some View {
         HStack(spacing: 8) {
-            ForEach(0..<3) { step in
+            ForEach(0..<4) { step in
                 Capsule()
                     .fill(step <= currentStep ? color.color : Color.gray.opacity(0.3))
                     .frame(height: 4)
@@ -314,7 +316,7 @@ struct CreateProfileView: View {
             }
             
             Button {
-                if currentStep < 2 {
+                if currentStep < 3 {
                     withAnimation {
                         currentStep += 1
                     }
@@ -322,7 +324,7 @@ struct CreateProfileView: View {
                     createProfile()
                 }
             } label: {
-                Text(currentStep == 2 ? "Create Profile" : "Next")
+                Text(currentStep == 3 ? "Create Profile" : "Next")
                     .font(.headline)
                     .frame(maxWidth: .infinity)
                     .padding()
@@ -343,10 +345,115 @@ struct CreateProfileView: View {
             return !name.trimmingCharacters(in: .whitespaces).isEmpty
         case 1:
             return !schedule.activeDays.isEmpty
-        case 2:
+        case 2, 3:
             return true
         default:
             return false
+        }
+    }
+    
+    private var strictnessStep: some View {
+        ScrollView {
+            VStack(spacing: 32) {
+                VStack(spacing: 8) {
+                    Text("Choose Strictness")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                    
+                    Text("How hard should it be to bypass\nblocking during focus time?")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+                .padding(.top, 32)
+                
+                VStack(spacing: 12) {
+                    ForEach(StrictnessLevel.allCases) { level in
+                        Button {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                strictnessLevel = level
+                            }
+                        } label: {
+                            HStack(spacing: 16) {
+                                ZStack {
+                                    Circle()
+                                        .fill(strictnessLevel == level ? color.color : Color(.systemGray4))
+                                        .frame(width: 44, height: 44)
+                                    
+                                    Image(systemName: level.iconName)
+                                        .font(.body)
+                                        .foregroundStyle(.white)
+                                }
+                                
+                                VStack(alignment: .leading, spacing: 4) {
+                                    HStack {
+                                        Text(level.displayName)
+                                            .font(.headline)
+                                            .foregroundStyle(.primary)
+                                        
+                                        if level == .strict {
+                                            Text("RECOMMENDED")
+                                                .font(.caption2)
+                                                .fontWeight(.bold)
+                                                .padding(.horizontal, 6)
+                                                .padding(.vertical, 2)
+                                                .background(color.color)
+                                                .foregroundStyle(.white)
+                                                .clipShape(Capsule())
+                                        }
+                                    }
+                                    
+                                    Text(level.description)
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                        .multilineTextAlignment(.leading)
+                                }
+                                
+                                Spacer()
+                                
+                                if strictnessLevel == level {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .foregroundStyle(color.color)
+                                        .font(.title3)
+                                }
+                            }
+                            .padding()
+                            .background(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .fill(Color(.systemGray6))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .stroke(strictnessLevel == level ? color.color : .clear, lineWidth: 2)
+                                    )
+                            )
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(.horizontal, 24)
+                
+                if strictnessLevel == .locked {
+                    VStack(spacing: 8) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .foregroundStyle(.red)
+                            Text("Full Lockdown")
+                                .fontWeight(.semibold)
+                        }
+                        
+                        Text("You will NOT be able to disable blocking during scheduled time. The only escape is deleting the entire profile, which requires a 5-minute waiting period.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
+                    }
+                    .padding()
+                    .background(Color.red.opacity(0.1))
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .padding(.horizontal, 24)
+                }
+                
+                Spacer()
+            }
         }
     }
     
@@ -356,7 +463,8 @@ struct CreateProfileView: View {
             iconName: iconName,
             color: color,
             schedule: schedule,
-            blockedWebsites: blockedWebsites
+            blockedWebsites: blockedWebsites,
+            strictnessLevel: strictnessLevel
         )
         newProfile.blockedApps = blockedApps
         
