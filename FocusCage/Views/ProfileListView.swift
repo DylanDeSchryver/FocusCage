@@ -5,7 +5,6 @@ struct ProfileListView: View {
     @EnvironmentObject var screenTimeManager: ScreenTimeManager
     @State private var showingCreateProfile = false
     @State private var profileToEdit: FocusProfile?
-    @State private var showingNuclearSheet = false
     @State private var nuclearProfile: FocusProfile?
     
     var body: some View {
@@ -34,10 +33,8 @@ struct ProfileListView: View {
             .sheet(item: $profileToEdit) { profile in
                 ProfileDetailView(profile: profile)
             }
-            .sheet(isPresented: $showingNuclearSheet) {
-                if let nuclearProfile {
-                    NuclearButtonSheet(profile: nuclearProfile)
-                }
+            .sheet(item: $nuclearProfile) { profile in
+                NuclearButtonSheet(profile: profile)
             }
         }
     }
@@ -147,7 +144,6 @@ struct ProfileListView: View {
                     // Use the first profile with blocked content for nuclear
                     if let firstProfile = profileManager.profiles.first {
                         nuclearProfile = firstProfile
-                        showingNuclearSheet = true
                     }
                 } label: {
                     HStack(spacing: 12) {

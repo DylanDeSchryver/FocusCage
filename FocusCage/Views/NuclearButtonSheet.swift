@@ -11,8 +11,6 @@ struct NuclearButtonSheet: View {
     @State private var canConfirm = false
     @State private var activated = false
     
-    private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
-    
     var body: some View {
         VStack(spacing: 32) {
             Spacer()
@@ -75,14 +73,14 @@ struct NuclearButtonSheet: View {
         }
         .padding(24)
         .interactiveDismissDisabled()
-        .onReceive(timer) { _ in
-            if !canConfirm && confirmCountdown > 0 {
+        .task {
+            while confirmCountdown > 0 {
+                try? await Task.sleep(nanoseconds: 1_000_000_000)
+                guard !Task.isCancelled else { return }
                 confirmCountdown -= 1
-                if confirmCountdown <= 0 {
-                    withAnimation {
-                        canConfirm = true
-                    }
-                }
+            }
+            withAnimation {
+                canConfirm = true
             }
         }
     }

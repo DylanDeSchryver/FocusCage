@@ -5,7 +5,6 @@ struct ActiveProfileView: View {
     @EnvironmentObject var screenTimeManager: ScreenTimeManager
     @State private var currentTime = Date()
     @State private var showingCooldownSheet = false
-    @State private var showingNuclearSheet = false
     @State private var nuclearProfile: FocusProfile?
     
     let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
@@ -33,10 +32,8 @@ struct ActiveProfileView: View {
                     CooldownSheet(profile: activeProfile)
                 }
             }
-            .sheet(isPresented: $showingNuclearSheet) {
-                if let nuclearProfile {
-                    NuclearButtonSheet(profile: nuclearProfile)
-                }
+            .sheet(item: $nuclearProfile) { profile in
+                NuclearButtonSheet(profile: profile)
             }
         }
     }
@@ -280,7 +277,6 @@ struct ActiveProfileView: View {
                 Button {
                     if let firstProfile = profileManager.profiles.first {
                         nuclearProfile = firstProfile
-                        showingNuclearSheet = true
                     }
                 } label: {
                     HStack(spacing: 8) {
