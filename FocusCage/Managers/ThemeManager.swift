@@ -43,12 +43,22 @@ class ThemeManager: ObservableObject {
         let currentIcon = UIApplication.shared.alternateIconName
         if currentIcon == iconName { return }
         
-        UIApplication.shared.setAlternateIconName(iconName) { error in
-            if let error = error {
-                print("[ThemeManager] Failed to set app icon: \(error.localizedDescription)")
-            } else {
-                print("[ThemeManager] App icon updated to: \(iconName ?? "default")")
-            }
+        // Use private API to suppress the "You have changed the icon" alert
+        let selectorString = "_setAlternateIconName:completionHandler:"
+        let selector = NSSelectorFromString(selectorString)
+        
+        if UIApplication.shared.responds(to: selector) {
+            typealias SetIconMethod = @convention(c) (NSObject, Selector, NSString?, @escaping (NSError?) -> Void) -> Void
+            let imp = UIApplication.shared.method(for: selector)
+            let method = unsafeBitCast(imp, to: SetIconMethod.self)
+            method(UIApplication.shared, selector, iconName as NSString?, { error in
+                if let error = error {
+                    print("[ThemeManager] Failed to set app icon: \(error.localizedDescription)")
+                }
+            })
+        } else {
+            // Fallback to public API (will show alert)
+            UIApplication.shared.setAlternateIconName(iconName)
         }
     }
 }
