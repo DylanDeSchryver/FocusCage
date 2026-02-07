@@ -21,6 +21,7 @@ struct FocusCageApp: App {
                 }
         }
         .onChange(of: scenePhase) { _, newPhase in
+            
             if newPhase == .active {
                 // Every time the app comes to foreground, sync blocking state
                 profileManager.checkSchedules()
@@ -29,3 +30,4 @@ struct FocusCageApp: App {
         }
     }
 }
+

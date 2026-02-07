@@ -6,6 +6,7 @@ struct ProfileListView: View {
     @State private var showingCreateProfile = false
     @State private var profileToEdit: FocusProfile?
     @State private var nuclearProfile: FocusProfile?
+    @State private var deleteProfile: FocusProfile?
     
     var body: some View {
         NavigationStack {
@@ -35,6 +36,13 @@ struct ProfileListView: View {
             }
             .sheet(item: $nuclearProfile) { profile in
                 NuclearButtonSheet(profile: profile)
+            }
+            .sheet(item: $deleteProfile) { profile in
+                LockedDeleteCooldownSheet(profile: profile) {
+                    profileManager.deleteProfile(profile)
+                    profileManager.checkSchedules()
+                    screenTimeManager.syncBlockingState(with: profileManager.profiles)
+                }
             }
         }
     }
@@ -81,14 +89,27 @@ struct ProfileListView: View {
                     profileToEdit = profile
                 }
                 .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                    Button(role: .destructive) {
-                        withAnimation {
-                            profileManager.deleteProfile(profile)
-                            profileManager.checkSchedules()
-                            screenTimeManager.syncBlockingState(with: profileManager.profiles)
+                    let isActiveProtected = profile.isEnabled &&
+                        profile.schedule.isActiveNow() &&
+                        profileManager.activeProfileId == profile.id &&
+                        profile.strictnessLevel != .standard
+                    if isActiveProtected {
+                        Button {
+                            deleteProfile = profile
+                        } label: {
+                            Label("Delete", systemImage: "trash")
                         }
-                    } label: {
-                        Label("Delete", systemImage: "trash")
+                        .tint(.red)
+                    } else {
+                        Button(role: .destructive) {
+                            withAnimation {
+                                profileManager.deleteProfile(profile)
+                                profileManager.checkSchedules()
+                                screenTimeManager.syncBlockingState(with: profileManager.profiles)
+                            }
+                        } label: {
+                            Label("Delete", systemImage: "trash")
+                        }
                     }
                 }
                 .swipeActions(edge: .leading) {
