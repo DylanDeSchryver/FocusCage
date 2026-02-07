@@ -40,9 +40,6 @@ struct ProfileDetailView: View {
                 strictnessSection
                 scheduleSection
                 blockedAppsSection
-                if isActiveLockedProfile {
-                    lockedEditNotice
-                }
                 dangerZoneSection
             }
             .navigationTitle("Edit Profile")
@@ -66,10 +63,7 @@ struct ProfileDetailView: View {
             }
             .sheet(isPresented: $showingAppPicker) {
                 AppSelectionView(
-                    selection: Binding(
-                        get: { profile.blockedApps },
-                        set: { profile.blockedApps = $0 }
-                    ),
+                    selection: $profile.blockedApps,
                     blockedWebsites: $profile.blockedWebsites
                 )
             }
@@ -178,18 +172,31 @@ struct ProfileDetailView: View {
         }
     }
     
+    private var isActiveProtectedSession: Bool {
+        isActiveSession && profile.strictnessLevel != .standard
+    }
+    
     private var scheduleSection: some View {
         Section {
-            NavigationLink {
-                ScheduleView(schedule: $profile.schedule, color: profile.color)
-            } label: {
+            if isActiveProtectedSession {
                 HStack {
                     Label("Schedule", systemImage: "clock")
-                    
                     Spacer()
-                    
                     Text("\(profile.schedule.startTimeString) - \(profile.schedule.endTimeString)")
                         .foregroundStyle(.secondary)
+                }
+            } else {
+                NavigationLink {
+                    ScheduleView(schedule: $profile.schedule, color: profile.color)
+                } label: {
+                    HStack {
+                        Label("Schedule", systemImage: "clock")
+                        
+                        Spacer()
+                        
+                        Text("\(profile.schedule.startTimeString) - \(profile.schedule.endTimeString)")
+                            .foregroundStyle(.secondary)
+                    }
                 }
             }
             
@@ -221,42 +228,62 @@ struct ProfileDetailView: View {
         } header: {
             Text("Schedule")
         } footer: {
-            Text("Apps will be blocked during the scheduled time on selected days. No exceptions, no bypasses.")
+            if isActiveProtectedSession {
+                Text("Schedule cannot be changed during an active \(profile.strictnessLevel.displayName) session.")
+            } else {
+                Text("Apps will be blocked during the scheduled time on selected days. No exceptions, no bypasses.")
+            }
         }
     }
     
     private var blockedAppsSection: some View {
         Section {
-            Button {
-                showingAppPicker = true
-            } label: {
+            if isActiveProtectedSession {
                 HStack {
-                    Label("Select Content to Block", systemImage: "apps.iphone")
-                    
+                    Label("Blocked Content", systemImage: "apps.iphone")
                     Spacer()
-                    
                     let appCount = profile.blockedApps.applicationTokens.count
                     let categoryCount = profile.blockedApps.categoryTokens.count
                     let websiteCount = profile.blockedWebsites.count
-                    
-                    if appCount > 0 || categoryCount > 0 || websiteCount > 0 {
-                        Text("\(appCount + categoryCount + websiteCount) items")
-                            .foregroundStyle(.secondary)
-                    } else {
-                        Text("None selected")
-                            .foregroundStyle(.secondary)
-                    }
-                    
-                    Image(systemName: "chevron.right")
-                        .font(.caption)
-                        .foregroundStyle(.tertiary)
+                    Text("\(appCount + categoryCount + websiteCount) items")
+                        .foregroundStyle(.secondary)
                 }
+            } else {
+                Button {
+                    showingAppPicker = true
+                } label: {
+                    HStack {
+                        Label("Select Content to Block", systemImage: "apps.iphone")
+                        
+                        Spacer()
+                        
+                        let appCount = profile.blockedApps.applicationTokens.count
+                        let categoryCount = profile.blockedApps.categoryTokens.count
+                        let websiteCount = profile.blockedWebsites.count
+                        
+                        if appCount > 0 || categoryCount > 0 || websiteCount > 0 {
+                            Text("\(appCount + categoryCount + websiteCount) items")
+                                .foregroundStyle(.secondary)
+                        } else {
+                            Text("None selected")
+                                .foregroundStyle(.secondary)
+                        }
+                        
+                        Image(systemName: "chevron.right")
+                            .font(.caption)
+                            .foregroundStyle(.tertiary)
+                    }
+                }
+                .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
         } header: {
             Text("Blocked Content")
         } footer: {
-            Text("Selected apps, categories, and websites will be completely inaccessible during focus time. Website blocking works system-wide across all browsers.")
+            if isActiveProtectedSession {
+                Text("Blocked content cannot be changed during an active \(profile.strictnessLevel.displayName) session.")
+            } else {
+                Text("Selected apps, categories, and websites will be completely inaccessible during focus time. Website blocking works system-wide across all browsers.")
+            }
         }
     }
     
@@ -305,22 +332,11 @@ struct ProfileDetailView: View {
         }
     }
     
-    private var lockedEditNotice: some View {
-        Section {
-            HStack(spacing: 12) {
-                Image(systemName: "info.circle.fill")
-                    .foregroundStyle(.blue)
-                Text("Schedule and blocked content changes will take effect after the current session ends.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-        }
-    }
     
     private var dangerZoneSection: some View {
         Section {
             Button(role: .destructive) {
-                if isActiveLockedProfile {
+                if isActiveProtectedSession {
                     showingLockedDeleteCooldown = true
                 } else {
                     showingDeleteConfirmation = true
