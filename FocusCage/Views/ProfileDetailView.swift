@@ -260,9 +260,15 @@ struct ProfileDetailView: View {
         }
     }
     
+    private var isActiveSession: Bool {
+        profile.isEnabled &&
+        profile.schedule.isActiveNow() &&
+        profileManager.activeProfileId == profile.id
+    }
+    
     private var strictnessSection: some View {
         Section {
-            if isActiveLockedProfile {
+            if isActiveSession && profile.strictnessLevel != .standard {
                 HStack {
                     Image(systemName: profile.strictnessLevel.iconName)
                         .foregroundStyle(profile.color.color)
@@ -272,6 +278,13 @@ struct ProfileDetailView: View {
                     Text("Cannot change during active session")
                         .font(.caption)
                         .foregroundStyle(.secondary)
+                }
+            } else if isActiveSession && profile.strictnessLevel == .standard {
+                Picker("Strictness Level", selection: $profile.strictnessLevel) {
+                    ForEach(StrictnessLevel.allCases) { level in
+                        Label(level.displayName, systemImage: level.iconName)
+                            .tag(level)
+                    }
                 }
             } else {
                 Picker("Strictness Level", selection: $profile.strictnessLevel) {
@@ -284,7 +297,11 @@ struct ProfileDetailView: View {
         } header: {
             Text("Strictness")
         } footer: {
-            Text(profile.strictnessLevel.description)
+            if isActiveSession && profile.strictnessLevel != .standard {
+                Text("Strictness cannot be lowered during an active session. You can upgrade to a stricter level outside of scheduled time.")
+            } else {
+                Text(profile.strictnessLevel.description)
+            }
         }
     }
     
