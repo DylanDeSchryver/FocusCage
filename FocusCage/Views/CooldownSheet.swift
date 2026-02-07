@@ -8,8 +8,6 @@ struct CooldownSheet: View {
     @State private var timeRemaining: TimeInterval
     @State private var isComplete = false
     
-    private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
-    
     private let productiveSuggestions = [
         ("Drop and do 10 push-ups", "figure.strengthtraining.traditional"),
         ("Drink a glass of water", "drop.fill"),
@@ -91,12 +89,16 @@ struct CooldownSheet: View {
         }
         .padding(24)
         .interactiveDismissDisabled()
-        .onReceive(timer) { _ in
-            if let cooldownEnd = profileManager.cooldownEndDate {
-                timeRemaining = max(0, cooldownEnd.timeIntervalSinceNow)
-                if timeRemaining <= 0 && !isComplete {
-                    withAnimation(.spring()) {
-                        isComplete = true
+        .task {
+            while !isComplete {
+                try? await Task.sleep(nanoseconds: 1_000_000_000)
+                guard !Task.isCancelled else { return }
+                if let cooldownEnd = profileManager.cooldownEndDate {
+                    timeRemaining = max(0, cooldownEnd.timeIntervalSinceNow)
+                    if timeRemaining <= 0 {
+                        withAnimation(.spring()) {
+                            isComplete = true
+                        }
                     }
                 }
             }
