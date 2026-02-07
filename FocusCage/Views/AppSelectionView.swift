@@ -2,6 +2,7 @@ import SwiftUI
 import FamilyControls
 
 struct AppSelectionView: View {
+    @EnvironmentObject var themeManager: ThemeManager
     @Environment(\.dismiss) private var dismiss
     @Binding var selection: FamilyActivitySelection
     @Binding var blockedWebsites: [BlockedWebsite]
@@ -43,7 +44,7 @@ struct AppSelectionView: View {
             VStack(spacing: 16) {
                 Image(systemName: "apps.iphone")
                     .font(.system(size: 60))
-                    .foregroundStyle(.indigo)
+                    .foregroundStyle(themeManager.accentColor)
                 
                 VStack(spacing: 8) {
                     Text("Select Apps to Block")
@@ -96,7 +97,7 @@ struct AppSelectionView: View {
                     .font(.headline)
                     .frame(maxWidth: .infinity)
                     .padding()
-                    .background(.indigo)
+                    .background(themeManager.accentColor)
                     .foregroundStyle(.white)
                     .clipShape(RoundedRectangle(cornerRadius: 12))
             }
@@ -121,6 +122,7 @@ struct AppSelectionView: View {
 }
 
 struct WebsiteSelectionContent: View {
+    @EnvironmentObject var themeManager: ThemeManager
     @Binding var blockedWebsites: [BlockedWebsite]
     @State private var customDomain = ""
     @State private var searchText = ""
@@ -154,7 +156,7 @@ struct WebsiteSelectionContent: View {
                             addCustomWebsite()
                         } label: {
                             Image(systemName: "plus.circle.fill")
-                                .foregroundStyle(.indigo)
+                                .foregroundStyle(themeManager.accentColor)
                         }
                     }
                 }
@@ -169,7 +171,7 @@ struct WebsiteSelectionContent: View {
                     ForEach(blockedWebsites) { website in
                         HStack {
                             Image(systemName: website.iconName)
-                                .foregroundStyle(.indigo)
+                                .foregroundStyle(themeManager.accentColor)
                                 .frame(width: 24)
                             
                             VStack(alignment: .leading, spacing: 2) {
@@ -202,7 +204,7 @@ struct WebsiteSelectionContent: View {
                     } label: {
                         HStack {
                             Image(systemName: website.iconName)
-                                .foregroundStyle(isBlocked ? .indigo : .secondary)
+                                .foregroundStyle(isBlocked ? themeManager.accentColor : .secondary)
                                 .frame(width: 24)
                             
                             VStack(alignment: .leading, spacing: 2) {
@@ -217,7 +219,7 @@ struct WebsiteSelectionContent: View {
                             Spacer()
                             
                             Image(systemName: isBlocked ? "checkmark.circle.fill" : "circle")
-                                .foregroundStyle(isBlocked ? .indigo : .secondary)
+                                .foregroundStyle(isBlocked ? themeManager.accentColor : .secondary)
                         }
                     }
                     .buttonStyle(.plain)

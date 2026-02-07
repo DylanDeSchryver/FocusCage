@@ -25,7 +25,7 @@ struct ContentView: View {
                 }
                 .tag(2)
         }
-        .tint(.indigo)
+        // tint is set at the app level via ThemeManager
     }
 }
 

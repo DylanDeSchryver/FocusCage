@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct WebsiteSelectionView: View {
+    @EnvironmentObject var themeManager: ThemeManager
     @Environment(\.dismiss) private var dismiss
     @Binding var blockedWebsites: [BlockedWebsite]
     @State private var customDomain = ""
@@ -34,7 +35,7 @@ struct WebsiteSelectionView: View {
                                 addCustomWebsite()
                             } label: {
                                 Image(systemName: "plus.circle.fill")
-                                    .foregroundStyle(.indigo)
+                                    .foregroundStyle(themeManager.accentColor)
                             }
                         }
                     }
@@ -49,7 +50,7 @@ struct WebsiteSelectionView: View {
                         ForEach(blockedWebsites) { website in
                             HStack {
                                 Image(systemName: website.iconName)
-                                    .foregroundStyle(.indigo)
+                                    .foregroundStyle(themeManager.accentColor)
                                     .frame(width: 24)
                                 
                                 VStack(alignment: .leading, spacing: 2) {
@@ -85,7 +86,7 @@ struct WebsiteSelectionView: View {
                         } label: {
                             HStack {
                                 Image(systemName: website.iconName)
-                                    .foregroundStyle(isBlocked ? .indigo : .secondary)
+                                    .foregroundStyle(isBlocked ? themeManager.accentColor : .secondary)
                                     .frame(width: 24)
                                 
                                 VStack(alignment: .leading, spacing: 2) {
@@ -100,7 +101,7 @@ struct WebsiteSelectionView: View {
                                 Spacer()
                                 
                                 Image(systemName: isBlocked ? "checkmark.circle.fill" : "circle")
-                                    .foregroundStyle(isBlocked ? .indigo : .secondary)
+                                    .foregroundStyle(isBlocked ? themeManager.accentColor : .secondary)
                             }
                         }
                         .buttonStyle(.plain)

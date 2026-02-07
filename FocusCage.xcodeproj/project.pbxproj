@@ -28,6 +28,9 @@
 		E1E2E3E4A4 /* SharedDefaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1E2E3E4A9 /* SharedDefaults.swift */; };
 		F1F2F3F401 /* CooldownSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1F2F3F402 /* CooldownSheet.swift */; };
 		F1F2F3F403 /* NuclearButtonSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1F2F3F404 /* NuclearButtonSheet.swift */; };
+		G1G2G3G401 /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = G1G2G3G402 /* AppTheme.swift */; };
+		G1G2G3G403 /* ThemeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = G1G2G3G404 /* ThemeManager.swift */; };
+		G1G2G3G405 /* SplashScreenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = G1G2G3G406 /* SplashScreenView.swift */; };
 		E1E2E3E4BF /* FocusCageMonitor.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = E1E2E3E4A8 /* FocusCageMonitor.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
@@ -81,6 +84,9 @@
 		E1E2E3E4A8 /* FocusCageMonitor.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = FocusCageMonitor.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		F1F2F3F402 /* CooldownSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CooldownSheet.swift; sourceTree = "<group>"; };
 		F1F2F3F404 /* NuclearButtonSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NuclearButtonSheet.swift; sourceTree = "<group>"; };
+		G1G2G3G402 /* AppTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTheme.swift; sourceTree = "<group>"; };
+		G1G2G3G404 /* ThemeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeManager.swift; sourceTree = "<group>"; };
+		G1G2G3G406 /* SplashScreenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashScreenView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -139,6 +145,7 @@
 			isa = PBXGroup;
 			children = (
 				A1B2C3D408 /* FocusProfile.swift */,
+				G1G2G3G402 /* AppTheme.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -149,6 +156,7 @@
 				A1B2C3D410 /* ProfileManager.swift */,
 				A1B2C3D412 /* ScreenTimeManager.swift */,
 				E1E2E3E4A9 /* SharedDefaults.swift */,
+				G1G2G3G404 /* ThemeManager.swift */,
 			);
 			path = Managers;
 			sourceTree = "<group>";
@@ -166,6 +174,7 @@
 				A1B2C3D430 /* WebsiteSelectionView.swift */,
 				F1F2F3F402 /* CooldownSheet.swift */,
 				F1F2F3F404 /* NuclearButtonSheet.swift */,
+				G1G2G3G406 /* SplashScreenView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -296,6 +305,9 @@
 				E1E2E3E4A5 /* SharedDefaults.swift in Sources */,
 				F1F2F3F401 /* CooldownSheet.swift in Sources */,
 				F1F2F3F403 /* NuclearButtonSheet.swift in Sources */,
+				G1G2G3G401 /* AppTheme.swift in Sources */,
+				G1G2G3G403 /* ThemeManager.swift in Sources */,
+				G1G2G3G405 /* SplashScreenView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

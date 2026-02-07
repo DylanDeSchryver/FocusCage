@@ -5,13 +5,21 @@ import FamilyControls
 struct FocusCageApp: App {
     @StateObject private var profileManager = ProfileManager()
     @StateObject private var screenTimeManager = ScreenTimeManager()
+    @StateObject private var themeManager = ThemeManager()
     @Environment(\.scenePhase) private var scenePhase
     
     var body: some Scene {
         WindowGroup {
-            ContentView()
-                .environmentObject(profileManager)
-                .environmentObject(screenTimeManager)
+            ZStack {
+                ContentView()
+                    .environmentObject(profileManager)
+                    .environmentObject(screenTimeManager)
+                    .environmentObject(themeManager)
+                    .tint(themeManager.accentColor)
+                
+                SplashScreenView()
+                    .environmentObject(themeManager)
+            }
                 .onAppear {
                     Task {
                         await screenTimeManager.requestAuthorization()

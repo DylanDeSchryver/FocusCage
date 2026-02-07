@@ -2,11 +2,13 @@ import SwiftUI
 
 struct SettingsView: View {
     @EnvironmentObject var screenTimeManager: ScreenTimeManager
+    @EnvironmentObject var themeManager: ThemeManager
     @State private var showingAbout = false
     
     var body: some View {
         NavigationStack {
             Form {
+                themeSection
                 screenTimeSection
                 aboutSection
                 supportSection
@@ -18,6 +20,56 @@ struct SettingsView: View {
         }
     }
     
+    private var themeSection: some View {
+        Section {
+            VStack(alignment: .leading, spacing: 16) {
+                Text("Color Theme")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                
+                HStack(spacing: 12) {
+                    ForEach(AppTheme.allCases) { theme in
+                        Button {
+                            withAnimation(.spring(response: 0.3)) {
+                                themeManager.currentTheme = theme
+                            }
+                        } label: {
+                            VStack(spacing: 8) {
+                                ZStack {
+                                    RoundedRectangle(cornerRadius: 14)
+                                        .fill(theme.primaryColor.gradient)
+                                        .frame(width: 52, height: 52)
+                                    
+                                    Image(systemName: "lock.shield.fill")
+                                        .font(.title3)
+                                        .foregroundStyle(.white)
+                                    
+                                    if themeManager.currentTheme == theme {
+                                        RoundedRectangle(cornerRadius: 14)
+                                            .strokeBorder(.primary, lineWidth: 3)
+                                            .frame(width: 52, height: 52)
+                                    }
+                                }
+                                
+                                Text(theme.rawValue)
+                                    .font(.caption2)
+                                    .fontWeight(themeManager.currentTheme == theme ? .bold : .regular)
+                                    .foregroundStyle(themeManager.currentTheme == theme ? .primary : .secondary)
+                            }
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .frame(maxWidth: .infinity)
+            }
+            .padding(.vertical, 8)
+        } header: {
+            Text("Appearance")
+        } footer: {
+            Text("Changes the app icon, accent color, and splash screen to match your selected theme.")
+        }
+    }
+    
     private var screenTimeSection: some View {
         Section {
             HStack {
@@ -25,7 +77,7 @@ struct SettingsView: View {
                     Text("Screen Time Access")
                 } icon: {
                     Image(systemName: "hourglass")
-                        .foregroundStyle(.indigo)
+                        .foregroundStyle(themeManager.accentColor)
                 }
                 
                 Spacer()
@@ -112,6 +164,7 @@ struct SettingsView: View {
 }
 
 struct AboutView: View {
+    @EnvironmentObject var themeManager: ThemeManager
     @Environment(\.dismiss) private var dismiss
     
     var body: some View {
@@ -123,7 +176,7 @@ struct AboutView: View {
                             RoundedRectangle(cornerRadius: 24)
                                 .fill(
                                     LinearGradient(
-                                        colors: [.indigo, .purple],
+                                        colors: themeManager.gradientColors,
                                         startPoint: .topLeading,
                                         endPoint: .bottomTrailing
                                     )
@@ -199,6 +252,7 @@ struct AboutView: View {
 }
 
 struct FeatureRow: View {
+    @EnvironmentObject var themeManager: ThemeManager
     let icon: String
     let title: String
     let description: String
@@ -207,12 +261,12 @@ struct FeatureRow: View {
         HStack(alignment: .top, spacing: 16) {
             ZStack {
                 Circle()
-                    .fill(Color.indigo.opacity(0.15))
+                    .fill(themeManager.accentColor.opacity(0.15))
                     .frame(width: 44, height: 44)
                 
                 Image(systemName: icon)
                     .font(.body)
-                    .foregroundStyle(.indigo)
+                    .foregroundStyle(themeManager.accentColor)
             }
             
             VStack(alignment: .leading, spacing: 4) {

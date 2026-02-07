@@ -3,6 +3,7 @@ import SwiftUI
 struct ProfileListView: View {
     @EnvironmentObject var profileManager: ProfileManager
     @EnvironmentObject var screenTimeManager: ScreenTimeManager
+    @EnvironmentObject var themeManager: ThemeManager
     @State private var showingCreateProfile = false
     @State private var profileToEdit: FocusProfile?
     @State private var nuclearProfile: FocusProfile?
@@ -51,7 +52,7 @@ struct ProfileListView: View {
         VStack(spacing: 24) {
             Image(systemName: "lock.shield")
                 .font(.system(size: 80))
-                .foregroundStyle(.indigo.opacity(0.6))
+                .foregroundStyle(themeManager.accentColor.opacity(0.6))
             
             VStack(spacing: 8) {
                 Text("No Focus Profiles")
@@ -73,7 +74,7 @@ struct ProfileListView: View {
                     .padding(.vertical, 12)
             }
             .buttonStyle(.borderedProminent)
-            .tint(.indigo)
+            .tint(themeManager.accentColor)
         }
         .padding()
     }
