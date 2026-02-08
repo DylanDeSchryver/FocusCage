@@ -76,44 +76,37 @@ struct FocusCageWidgetLiveActivity: Widget {
                     }
                 }
                 DynamicIslandExpandedRegion(.trailing) {
-                    HStack(spacing: 4) {
-                        Image(systemName: context.state.isLocked ? "lock.fill" : "shield.fill")
-                            .font(.caption2)
-                        Text(context.state.isLocked ? "Locked" : "Strict")
-                            .font(.caption)
-                    }
-                    .foregroundStyle(context.state.isLocked ? .red : .orange)
-                }
-                DynamicIslandExpandedRegion(.bottom) {
-                    HStack {
-                        Text("Ends at")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                        
-                        Spacer(minLength: 0)
-                        
+                    VStack(alignment: .trailing, spacing: 2) {
+                        HStack(spacing: 4) {
+                            Image(systemName: context.state.isLocked ? "lock.fill" : "shield.fill")
+                                .font(.caption2)
+                            Text(context.state.isLocked ? "Locked" : "Strict")
+                                .font(.caption)
+                        }
+                        .foregroundStyle(context.state.isLocked ? .red : .orange)
+
                         Text(context.attributes.endTime, style: .timer)
-                            .font(.system(.title3, design: .rounded))
-                            .fontWeight(.bold)
+                            .font(.system(.subheadline, design: .rounded))
+                            .fontWeight(.semibold)
                             .monospacedDigit()
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
                             .foregroundStyle(color(from: context.attributes.profileColorHex))
                     }
-                    .frame(maxWidth: .infinity)
                 }
             } compactLeading: {
                 Image(systemName: "lock.shield.fill")
                     .font(.subheadline)
                     .foregroundStyle(color(from: context.attributes.profileColorHex))
             } compactTrailing: {
-                HStack(spacing: 0) {
-                    Spacer(minLength: 0)
-                    Text(context.attributes.endTime, style: .timer)
-                        .font(.system(.caption, design: .rounded))
-                        .fontWeight(.semibold)
-                        .monospacedDigit()
-                        .foregroundStyle(color(from: context.attributes.profileColorHex))
-                }
-                .frame(maxWidth: .infinity, alignment: .trailing)
+                Text(context.attributes.endTime, style: .timer)
+                    .font(.system(.caption, design: .rounded))
+                    .fontWeight(.semibold)
+                    .monospacedDigit()
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+                    .frame(width: 56, alignment: .trailing)
+                    .foregroundStyle(color(from: context.attributes.profileColorHex))
             } minimal: {
                 Image(systemName: "lock.shield.fill")
                     .font(.caption)
