@@ -107,7 +107,7 @@ FocusCageMonitor/                    # Device Activity Monitor extension
 
 ## Privacy
 
-FocusCage contains no ads, no analytics, no tracking, and no server-side components. All data is stored locally on your device. See our [Privacy Policy](https://dylandeschryver.github.io/FocusCage/privacy-policy.html).
+FocusCage contains no ads, no analytics, no tracking, and no server-side components. All data is stored locally on your device. See our [Privacy Policy](https://dylandeschryver.github.io/FocusCage/privacy-policy).
 
 ## License
 
