@@ -63,7 +63,7 @@ These terms shall be governed by and construed in accordance with applicable law
 
 If you have any questions about these Terms of Service, please contact us at:
 
-[focuscageapp@gmail.com](mailto:focuscageapp@gmail.com)
+[dylandeschryver2008@gmail.com](mailto:dylandeschryver2008@gmail.com)
 
 ---
 
