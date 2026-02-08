@@ -136,7 +136,7 @@ struct SettingsView: View {
     
     private var supportSection: some View {
         Section {
-            Link(destination: URL(string: "https://apple.com")!) {
+            Link(destination: URL(string: "https://dylandeschryver.github.io/FocusCage/privacy-policy.html")!) {
                 HStack {
                     Label("Privacy Policy", systemImage: "hand.raised")
                     Spacer()
@@ -147,7 +147,7 @@ struct SettingsView: View {
             }
             .buttonStyle(.plain)
             
-            Link(destination: URL(string: "https://apple.com")!) {
+            Link(destination: URL(string: "https://dylandeschryver.github.io/FocusCage/terms-of-service.html")!) {
                 HStack {
                     Label("Terms of Service", systemImage: "doc.text")
                     Spacer()
