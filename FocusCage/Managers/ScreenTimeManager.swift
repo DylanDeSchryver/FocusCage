@@ -21,13 +21,16 @@ class ScreenTimeManager: ObservableObject {
         switch center.authorizationStatus {
         case .approved:
             isAuthorized = true
+            authorizationError = nil
         case .denied:
             isAuthorized = false
-            authorizationError = "Screen Time access was denied. Please enable it in Settings."
+            authorizationError = "Screen Time access was denied. Open Settings → Screen Time → Content & Privacy Restrictions and ensure FocusCage is allowed."
         case .notDetermined:
             isAuthorized = false
+            authorizationError = nil
         @unknown default:
             isAuthorized = false
+            authorizationError = "Unable to determine Screen Time authorization status. Please restart the app and try again."
         }
     }
     
@@ -39,7 +42,7 @@ class ScreenTimeManager: ObservableObject {
             authorizationError = nil
         } catch {
             isAuthorized = false
-            authorizationError = "Failed to get Screen Time authorization: \(error.localizedDescription)"
+            authorizationError = "Screen Time authorization failed. Make sure Screen Time is enabled in Settings → Screen Time, then try again. (\(error.localizedDescription))"
         }
     }
     

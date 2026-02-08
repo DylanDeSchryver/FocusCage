@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 56;
+	objectVersion = 70;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -22,16 +22,24 @@
 		A1B2C3D425 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D426 /* SettingsView.swift */; };
 		A1B2C3D429 /* WebsiteSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D430 /* WebsiteSelectionView.swift */; };
 		A1B2C3D431 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A1B2C3D432 /* LaunchScreen.storyboard */; };
-		E1E2E3E4A5 /* SharedDefaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1E2E3E4A9 /* SharedDefaults.swift */; };
 		E1E2E3E4A1 /* DeviceActivityMonitorExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1E2E3E4A2 /* DeviceActivityMonitorExtension.swift */; };
 		E1E2E3E4A3 /* FocusProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D408 /* FocusProfile.swift */; };
 		E1E2E3E4A4 /* SharedDefaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1E2E3E4A9 /* SharedDefaults.swift */; };
+		E1E2E3E4A5 /* SharedDefaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1E2E3E4A9 /* SharedDefaults.swift */; };
+		E1E2E3E4BF /* FocusCageMonitor.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = E1E2E3E4A8 /* FocusCageMonitor.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		F1F2F3F401 /* CooldownSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1F2F3F402 /* CooldownSheet.swift */; };
 		F1F2F3F403 /* NuclearButtonSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1F2F3F404 /* NuclearButtonSheet.swift */; };
+		FCAE90082F380555005C55C1 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FCAE90072F380555005C55C1 /* WidgetKit.framework */; };
+		FCAE900A2F380555005C55C1 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FCAE90092F380555005C55C1 /* SwiftUI.framework */; };
+		FCAE90192F380555005C55C1 /* FocusCageWidgetExtension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = FCAE90052F380554005C55C1 /* FocusCageWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		G1G2G3G401 /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = G1G2G3G402 /* AppTheme.swift */; };
 		G1G2G3G403 /* ThemeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = G1G2G3G404 /* ThemeManager.swift */; };
 		G1G2G3G405 /* SplashScreenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = G1G2G3G406 /* SplashScreenView.swift */; };
-		E1E2E3E4BF /* FocusCageMonitor.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = E1E2E3E4A8 /* FocusCageMonitor.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		H1H2H3H401 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = H1H2H3H402 /* OnboardingView.swift */; };
+		H1H2H3H403 /* FocusSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = H1H2H3H404 /* FocusSession.swift */; };
+		H1H2H3H405 /* StatisticsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = H1H2H3H406 /* StatisticsManager.swift */; };
+		H1H2H3H407 /* StatisticsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = H1H2H3H408 /* StatisticsView.swift */; };
+		H1H2H3H409 /* FocusCageActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = H1H2H3H410 /* FocusCageActivity.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -41,6 +49,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = E1E2E3E4NT;
 			remoteInfo = FocusCageMonitor;
+		};
+		FCAE90172F380555005C55C1 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A1B2C3D4PJ /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = FCAE90042F380554005C55C1;
+			remoteInfo = FocusCageWidgetExtension;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -52,6 +67,7 @@
 			dstSubfolderSpec = 13;
 			files = (
 				E1E2E3E4BF /* FocusCageMonitor.appex in Embed App Extensions */,
+				FCAE90192F380555005C55C1 /* FocusCageWidgetExtension.appex in Embed App Extensions */,
 			);
 			name = "Embed App Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -77,17 +93,40 @@
 		A1B2C3D428 /* FocusCage.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = FocusCage.entitlements; sourceTree = "<group>"; };
 		A1B2C3D430 /* WebsiteSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebsiteSelectionView.swift; sourceTree = "<group>"; };
 		A1B2C3D432 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
-		E1E2E3E4A9 /* SharedDefaults.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedDefaults.swift; sourceTree = "<group>"; };
 		E1E2E3E4A2 /* DeviceActivityMonitorExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceActivityMonitorExtension.swift; sourceTree = "<group>"; };
 		E1E2E3E4A6 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		E1E2E3E4A7 /* FocusCageMonitor.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = FocusCageMonitor.entitlements; sourceTree = "<group>"; };
 		E1E2E3E4A8 /* FocusCageMonitor.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = FocusCageMonitor.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		E1E2E3E4A9 /* SharedDefaults.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedDefaults.swift; sourceTree = "<group>"; };
 		F1F2F3F402 /* CooldownSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CooldownSheet.swift; sourceTree = "<group>"; };
 		F1F2F3F404 /* NuclearButtonSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NuclearButtonSheet.swift; sourceTree = "<group>"; };
+		FCAE90052F380554005C55C1 /* FocusCageWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = FocusCageWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		FCAE90072F380555005C55C1 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		FCAE90092F380555005C55C1 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		FCAE901E2F3805CA005C55C1 /* FocusCageWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = FocusCageWidgetExtension.entitlements; sourceTree = "<group>"; };
 		G1G2G3G402 /* AppTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTheme.swift; sourceTree = "<group>"; };
 		G1G2G3G404 /* ThemeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeManager.swift; sourceTree = "<group>"; };
 		G1G2G3G406 /* SplashScreenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashScreenView.swift; sourceTree = "<group>"; };
+		H1H2H3H402 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		H1H2H3H404 /* FocusSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusSession.swift; sourceTree = "<group>"; };
+		H1H2H3H406 /* StatisticsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatisticsManager.swift; sourceTree = "<group>"; };
+		H1H2H3H408 /* StatisticsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatisticsView.swift; sourceTree = "<group>"; };
+		H1H2H3H410 /* FocusCageActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusCageActivity.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		FCAE901C2F380555005C55C1 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = FCAE90042F380554005C55C1 /* FocusCageWidgetExtension */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		FCAE900B2F380555005C55C1 /* FocusCageWidget */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (FCAE901C2F380555005C55C1 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = FocusCageWidget; sourceTree = "<group>"; };
+/* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		A1B2C3D4FW /* Frameworks */ = {
@@ -104,14 +143,26 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		FCAE90022F380554005C55C1 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FCAE900A2F380555005C55C1 /* SwiftUI.framework in Frameworks */,
+				FCAE90082F380555005C55C1 /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		A1B2C3D4G1 = {
 			isa = PBXGroup;
 			children = (
+				FCAE901E2F3805CA005C55C1 /* FocusCageWidgetExtension.entitlements */,
 				A1B2C3D4G2 /* FocusCage */,
 				E1E2E3E4G1 /* FocusCageMonitor */,
+				FCAE900B2F380555005C55C1 /* FocusCageWidget */,
+				FCAE90062F380555005C55C1 /* Frameworks */,
 				A1B2C3D4G3 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -137,6 +188,7 @@
 			children = (
 				A1B2C3D400 /* FocusCage.app */,
 				E1E2E3E4A8 /* FocusCageMonitor.appex */,
+				FCAE90052F380554005C55C1 /* FocusCageWidgetExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -146,6 +198,8 @@
 			children = (
 				A1B2C3D408 /* FocusProfile.swift */,
 				G1G2G3G402 /* AppTheme.swift */,
+				H1H2H3H404 /* FocusSession.swift */,
+				H1H2H3H410 /* FocusCageActivity.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -157,6 +211,7 @@
 				A1B2C3D412 /* ScreenTimeManager.swift */,
 				E1E2E3E4A9 /* SharedDefaults.swift */,
 				G1G2G3G404 /* ThemeManager.swift */,
+				H1H2H3H406 /* StatisticsManager.swift */,
 			);
 			path = Managers;
 			sourceTree = "<group>";
@@ -175,6 +230,8 @@
 				F1F2F3F402 /* CooldownSheet.swift */,
 				F1F2F3F404 /* NuclearButtonSheet.swift */,
 				G1G2G3G406 /* SplashScreenView.swift */,
+				H1H2H3H402 /* OnboardingView.swift */,
+				H1H2H3H408 /* StatisticsView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -187,6 +244,15 @@
 				E1E2E3E4A7 /* FocusCageMonitor.entitlements */,
 			);
 			path = FocusCageMonitor;
+			sourceTree = "<group>";
+		};
+		FCAE90062F380555005C55C1 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				FCAE90072F380555005C55C1 /* WidgetKit.framework */,
+				FCAE90092F380555005C55C1 /* SwiftUI.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -205,6 +271,7 @@
 			);
 			dependencies = (
 				E1E2E3E4TD /* PBXTargetDependency */,
+				FCAE90182F380555005C55C1 /* PBXTargetDependency */,
 			);
 			name = FocusCage;
 			productName = FocusCage;
@@ -228,6 +295,28 @@
 			productReference = E1E2E3E4A8 /* FocusCageMonitor.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
+		FCAE90042F380554005C55C1 /* FocusCageWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = FCAE901D2F380555005C55C1 /* Build configuration list for PBXNativeTarget "FocusCageWidgetExtension" */;
+			buildPhases = (
+				FCAE90012F380554005C55C1 /* Sources */,
+				FCAE90022F380554005C55C1 /* Frameworks */,
+				FCAE90032F380554005C55C1 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				FCAE900B2F380555005C55C1 /* FocusCageWidget */,
+			);
+			name = FocusCageWidgetExtension;
+			packageProductDependencies = (
+			);
+			productName = FocusCageWidgetExtension;
+			productReference = FCAE90052F380554005C55C1 /* FocusCageWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -235,7 +324,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 1500;
+				LastSwiftUpdateCheck = 2620;
 				LastUpgradeCheck = 1500;
 				TargetAttributes = {
 					A1B2C3D4NT = {
@@ -243,6 +332,9 @@
 					};
 					E1E2E3E4NT = {
 						CreatedOnToolsVersion = 15.0;
+					};
+					FCAE90042F380554005C55C1 = {
+						CreatedOnToolsVersion = 26.2;
 					};
 				};
 			};
@@ -261,6 +353,7 @@
 			targets = (
 				A1B2C3D4NT /* FocusCage */,
 				E1E2E3E4NT /* FocusCageMonitor */,
+				FCAE90042F380554005C55C1 /* FocusCageWidgetExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -276,6 +369,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		E1E2E3E4RS /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FCAE90032F380554005C55C1 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -308,6 +408,11 @@
 				G1G2G3G401 /* AppTheme.swift in Sources */,
 				G1G2G3G403 /* ThemeManager.swift in Sources */,
 				G1G2G3G405 /* SplashScreenView.swift in Sources */,
+				H1H2H3H401 /* OnboardingView.swift in Sources */,
+				H1H2H3H403 /* FocusSession.swift in Sources */,
+				H1H2H3H405 /* StatisticsManager.swift in Sources */,
+				H1H2H3H407 /* StatisticsView.swift in Sources */,
+				H1H2H3H409 /* FocusCageActivity.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -321,6 +426,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		FCAE90012F380554005C55C1 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -328,6 +440,11 @@
 			isa = PBXTargetDependency;
 			target = E1E2E3E4NT /* FocusCageMonitor */;
 			targetProxy = E1E2E3E4CP /* PBXContainerItemProxy */;
+		};
+		FCAE90182F380555005C55C1 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = FCAE90042F380554005C55C1 /* FocusCageWidgetExtension */;
+			targetProxy = FCAE90172F380555005C55C1 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -399,10 +516,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = "$(ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES) AppIcon-Ocean AppIcon-Emerald AppIcon-Sunset AppIcon-Rose";
-				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = FocusCage/FocusCage.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -488,10 +605,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = "$(ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES) AppIcon-Ocean AppIcon-Emerald AppIcon-Sunset AppIcon-Rose";
-				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = FocusCage/FocusCage.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -569,6 +686,74 @@
 			};
 			name = Release;
 		};
+		FCAE901A2F380555005C55C1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = FocusCageWidgetExtension.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 5GDMGZQR8W;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = FocusCageWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = FocusCageWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.focuscage.app.FocusCageWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		FCAE901B2F380555005C55C1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = FocusCageWidgetExtension.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 5GDMGZQR8W;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = FocusCageWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = FocusCageWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.focuscage.app.FocusCageWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -595,6 +780,15 @@
 			buildConfigurations = (
 				E1E2E3E4D1 /* Debug */,
 				E1E2E3E4R1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		FCAE901D2F380555005C55C1 /* Build configuration list for PBXNativeTarget "FocusCageWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FCAE901A2F380555005C55C1 /* Debug */,
+				FCAE901B2F380555005C55C1 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

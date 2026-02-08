@@ -19,11 +19,17 @@ struct ContentView: View {
                 }
                 .tag(1)
             
+            StatisticsView()
+                .tabItem {
+                    Label("Stats", systemImage: "chart.bar.fill")
+                }
+                .tag(2)
+            
             SettingsView()
                 .tabItem {
                     Label("Settings", systemImage: "gear")
                 }
-                .tag(2)
+                .tag(3)
         }
         // tint is set at the app level via ThemeManager
     }

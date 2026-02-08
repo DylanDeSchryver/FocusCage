@@ -1,6 +1,8 @@
 import Foundation
 import Combine
 import DeviceActivity
+import WidgetKit
+import ActivityKit
 
 class ProfileManager: ObservableObject {
     @Published var profiles: [FocusProfile] = []
@@ -388,6 +390,9 @@ class ProfileManager: ObservableObject {
                 activeProfileId = nuclearId
                 saveActiveState()
                 if let profile = profiles.first(where: { $0.id == nuclearId }) {
+                    SharedDefaults.saveActiveState(profile: profile)
+                    WidgetCenter.shared.reloadAllTimelines()
+                    startLiveActivity(for: profile)
                     NotificationCenter.default.post(name: .profileActivated, object: profile)
                 }
             }
@@ -400,6 +405,9 @@ class ProfileManager: ObservableObject {
             if activeProfileId != firstActive.id {
                 activeProfileId = firstActive.id
                 saveActiveState()
+                SharedDefaults.saveActiveState(profile: firstActive)
+                WidgetCenter.shared.reloadAllTimelines()
+                startLiveActivity(for: firstActive)
                 NotificationCenter.default.post(name: .profileActivated, object: firstActive)
                 print("[ProfileManager] Profile activated: \(firstActive.name)")
             }
@@ -407,6 +415,9 @@ class ProfileManager: ObservableObject {
             let previousId = activeProfileId
             activeProfileId = nil
             saveActiveState()
+            SharedDefaults.saveActiveState(profile: nil)
+            WidgetCenter.shared.reloadAllTimelines()
+            endLiveActivity()
             NotificationCenter.default.post(name: .profileDeactivated, object: previousId)
             print("[ProfileManager] Profile deactivated")
         }
@@ -445,6 +456,69 @@ class ProfileManager: ObservableObject {
             return "\(hours)h \(minutes)m remaining"
         } else {
             return "\(minutes)m remaining"
+        }
+    }
+    
+    // MARK: - Live Activities
+    
+    private func startLiveActivity(for profile: FocusProfile) {
+        guard ActivityAuthorizationInfo().areActivitiesEnabled else {
+            print("[ProfileManager] Live Activities not enabled")
+            return
+        }
+        
+        // End any existing activity first
+        endLiveActivity()
+        
+        let calendar = Calendar.current
+        let now = Date()
+        let endHour = profile.schedule.endTime.hour ?? 0
+        let endMinute = profile.schedule.endTime.minute ?? 0
+        var endComponents = calendar.dateComponents([.year, .month, .day], from: now)
+        endComponents.hour = endHour
+        endComponents.minute = endMinute
+        let endTime = calendar.date(from: endComponents) ?? now
+        
+        let attributes = FocusCageWidgetAttributes(
+            profileName: profile.name,
+            profileIcon: profile.iconName,
+            profileColorHex: profile.color.rawValue,
+            endTime: endTime
+        )
+        
+        let remaining = Int(endTime.timeIntervalSince(now) / 60)
+        let state = FocusCageWidgetAttributes.ContentState(
+            remainingMinutes: remaining,
+            isLocked: profile.strictnessLevel == .locked
+        )
+        
+        let content = ActivityContent(state: state, staleDate: endTime)
+        
+        do {
+            let _ = try Activity.request(
+                attributes: attributes,
+                content: content,
+                pushType: nil
+            )
+            print("[ProfileManager] Live Activity started for '\(profile.name)'")
+        } catch {
+            print("[ProfileManager] Failed to start Live Activity: \(error)")
+        }
+    }
+    
+    private func endLiveActivity() {
+        Task {
+            for activity in Activity<FocusCageWidgetAttributes>.activities {
+                let finalState = FocusCageWidgetAttributes.ContentState(
+                    remainingMinutes: 0,
+                    isLocked: false
+                )
+                await activity.end(
+                    ActivityContent(state: finalState, staleDate: nil),
+                    dismissalPolicy: .immediate
+                )
+            }
+            print("[ProfileManager] Live Activities ended")
         }
     }
 }
