@@ -32,16 +32,18 @@ struct FocusCageApp: App {
                 .onAppear {
                     if !hasSeenOnboarding {
                         showingOnboarding = true
-                    }
-                    Task {
-                        await screenTimeManager.requestAuthorization()
-                        screenTimeManager.syncBlockingState(with: profileManager.profiles)
+                    } else {
+                        Task {
+                            await screenTimeManager.requestAuthorization()
+                            screenTimeManager.syncBlockingState(with: profileManager.profiles)
+                        }
                     }
                 }
         }
         .onChange(of: hasSeenOnboarding) { _, seen in
             if seen {
                 showingOnboarding = false
+                screenTimeManager.syncBlockingState(with: profileManager.profiles)
             }
         }
         .onChange(of: scenePhase) { _, newPhase in
