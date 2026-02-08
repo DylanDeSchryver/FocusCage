@@ -4,14 +4,13 @@ struct SettingsView: View {
     @EnvironmentObject var screenTimeManager: ScreenTimeManager
     @EnvironmentObject var themeManager: ThemeManager
     @State private var showingAbout = false
-    @State private var lastMonitorEventText: String = ""
     
     var body: some View {
         NavigationStack {
             Form {
                 themeSection
                 screenTimeSection
-                monitorSection
+                diagnosticsSection
                 aboutSection
                 supportSection
             }
@@ -19,20 +18,6 @@ struct SettingsView: View {
             .sheet(isPresented: $showingAbout) {
                 AboutView()
             }
-            .onAppear {
-                refreshMonitorEvent()
-            }
-        }
-    }
-
-    private func refreshMonitorEvent() {
-        if let evt = SharedDefaults.loadLastMonitorEvent() {
-            let formatter = DateFormatter()
-            formatter.dateStyle = .none
-            formatter.timeStyle = .medium
-            lastMonitorEventText = "\(evt.event) (\(formatter.string(from: evt.date)))"
-        } else {
-            lastMonitorEventText = "No monitor events recorded yet"
         }
     }
     
@@ -124,22 +109,20 @@ struct SettingsView: View {
         }
     }
 
-    private var monitorSection: some View {
+    private var diagnosticsSection: some View {
         Section {
-            HStack {
-                Label("Monitor Extension", systemImage: "waveform.path.ecg")
-                Spacer()
-                Button("Refresh") {
-                    refreshMonitorEvent()
+            NavigationLink {
+                DiagnosticsAndLogsView()
+            } label: {
+                HStack {
+                    Label("Diagnostics and Logs", systemImage: "waveform.path.ecg")
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
                 }
-                .font(.subheadline)
             }
-
-            Text(lastMonitorEventText)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-        } header: {
-            Text("Diagnostics")
+            .buttonStyle(.plain)
         }
     }
     
@@ -194,6 +177,51 @@ struct SettingsView: View {
             .buttonStyle(.plain)
         } header: {
             Text("Legal")
+        }
+    }
+}
+
+struct DiagnosticsAndLogsView: View {
+    @State private var lastMonitorEventText: String = ""
+
+    var body: some View {
+        Form {
+            monitorSection
+        }
+        .navigationTitle("Diagnostics & Logs")
+        .navigationBarTitleDisplayMode(.inline)
+        .onAppear {
+            refreshMonitorEvent()
+        }
+    }
+
+    private func refreshMonitorEvent() {
+        if let evt = SharedDefaults.loadLastMonitorEvent() {
+            let formatter = DateFormatter()
+            formatter.dateStyle = .none
+            formatter.timeStyle = .medium
+            lastMonitorEventText = "\(evt.event) (\(formatter.string(from: evt.date)))"
+        } else {
+            lastMonitorEventText = "No monitor events recorded yet"
+        }
+    }
+
+    private var monitorSection: some View {
+        Section {
+            HStack {
+                Label("Monitor Extension", systemImage: "waveform.path.ecg")
+                Spacer()
+                Button("Refresh") {
+                    refreshMonitorEvent()
+                }
+                .font(.subheadline)
+            }
+
+            Text(lastMonitorEventText)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        } header: {
+            Text("Diagnostics")
         }
     }
 }

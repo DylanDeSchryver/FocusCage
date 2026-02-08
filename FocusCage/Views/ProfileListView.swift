@@ -253,20 +253,24 @@ struct ProfileRow: View {
                 }
                 
                 VStack(alignment: .leading, spacing: 4) {
-                    HStack {
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
                         Text(profile.name)
                             .font(.headline)
                             .foregroundStyle(.primary)
+                            .lineLimit(2)
+                        
+                        Spacer(minLength: 8)
                         
                         if isActive {
                             Text("ACTIVE")
                                 .font(.caption2)
                                 .fontWeight(.bold)
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 2)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
                                 .background(.green)
                                 .foregroundStyle(.white)
                                 .clipShape(Capsule())
+                                .fixedSize(horizontal: true, vertical: true)
                         }
                     }
                     
@@ -294,8 +298,7 @@ struct ProfileRow: View {
                         }
                     }
                 }
-                
-                Spacer()
+                .frame(maxWidth: .infinity, alignment: .leading)
                 
                 if !profile.isEnabled {
                     Image(systemName: "pause.circle.fill")

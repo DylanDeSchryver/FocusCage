@@ -90,7 +90,7 @@ struct FocusCageWidgetLiveActivity: Widget {
                             .font(.caption)
                             .foregroundStyle(.secondary)
                         
-                        Spacer()
+                        Spacer(minLength: 0)
                         
                         Text(context.attributes.endTime, style: .timer)
                             .font(.system(.title3, design: .rounded))
@@ -98,17 +98,22 @@ struct FocusCageWidgetLiveActivity: Widget {
                             .monospacedDigit()
                             .foregroundStyle(color(from: context.attributes.profileColorHex))
                     }
+                    .frame(maxWidth: .infinity)
                 }
             } compactLeading: {
                 Image(systemName: "lock.shield.fill")
                     .font(.subheadline)
                     .foregroundStyle(color(from: context.attributes.profileColorHex))
             } compactTrailing: {
-                Text(context.attributes.endTime, style: .timer)
-                    .font(.system(.caption, design: .rounded))
-                    .fontWeight(.semibold)
-                    .monospacedDigit()
-                    .foregroundStyle(color(from: context.attributes.profileColorHex))
+                HStack(spacing: 0) {
+                    Spacer(minLength: 0)
+                    Text(context.attributes.endTime, style: .timer)
+                        .font(.system(.caption, design: .rounded))
+                        .fontWeight(.semibold)
+                        .monospacedDigit()
+                        .foregroundStyle(color(from: context.attributes.profileColorHex))
+                }
+                .frame(maxWidth: .infinity, alignment: .trailing)
             } minimal: {
                 Image(systemName: "lock.shield.fill")
                     .font(.caption)
