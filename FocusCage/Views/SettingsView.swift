@@ -4,12 +4,14 @@ struct SettingsView: View {
     @EnvironmentObject var screenTimeManager: ScreenTimeManager
     @EnvironmentObject var themeManager: ThemeManager
     @State private var showingAbout = false
+    @State private var lastMonitorEventText: String = ""
     
     var body: some View {
         NavigationStack {
             Form {
                 themeSection
                 screenTimeSection
+                monitorSection
                 aboutSection
                 supportSection
             }
@@ -17,6 +19,20 @@ struct SettingsView: View {
             .sheet(isPresented: $showingAbout) {
                 AboutView()
             }
+            .onAppear {
+                refreshMonitorEvent()
+            }
+        }
+    }
+
+    private func refreshMonitorEvent() {
+        if let evt = SharedDefaults.loadLastMonitorEvent() {
+            let formatter = DateFormatter()
+            formatter.dateStyle = .none
+            formatter.timeStyle = .medium
+            lastMonitorEventText = "\(evt.event) (\(formatter.string(from: evt.date)))"
+        } else {
+            lastMonitorEventText = "No monitor events recorded yet"
         }
     }
     
@@ -105,6 +121,25 @@ struct SettingsView: View {
             Text("Permissions")
         } footer: {
             Text("Screen Time access is required to block apps. This permission allows FocusCage to manage which apps can be opened during focus sessions.")
+        }
+    }
+
+    private var monitorSection: some View {
+        Section {
+            HStack {
+                Label("Monitor Extension", systemImage: "waveform.path.ecg")
+                Spacer()
+                Button("Refresh") {
+                    refreshMonitorEvent()
+                }
+                .font(.subheadline)
+            }
+
+            Text(lastMonitorEventText)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        } header: {
+            Text("Diagnostics")
         }
     }
     

@@ -1,6 +1,7 @@
 import Foundation
 import Combine
 import DeviceActivity
+import ManagedSettings
 import WidgetKit
 import ActivityKit
 
@@ -91,7 +92,7 @@ class ProfileManager: ObservableObject {
     
     func deleteProfile(_ profile: FocusProfile) {
         // Stop monitoring this profile
-        let activityName = DeviceActivityName(profile.id.uuidString)
+        let activityName = DeviceActivityName(SharedDefaults.activityRawValue(for: profile.id))
         activityCenter.stopMonitoring([activityName])
         
         profiles.removeAll { $0.id == profile.id }
@@ -203,6 +204,8 @@ class ProfileManager: ObservableObject {
         profiles[index].temporaryUnlockEndDate = unlockEnd
         saveProfiles()
         
+        // Clear extension's named store so shields are actually removed
+        clearExtensionStore(for: profileId)
         // Deactivate blocking temporarily
         NotificationCenter.default.post(name: .profileDeactivated, object: nil)
         print("[ProfileManager] Temporary unlock started for '\(profiles[index].name)', expires at \(unlockEnd)")
@@ -352,7 +355,7 @@ class ProfileManager: ObservableObject {
     }
     
     private func scheduleProfile(_ profile: FocusProfile) {
-        let activityName = DeviceActivityName(profile.id.uuidString)
+        let activityName = DeviceActivityName(SharedDefaults.activityRawValue(for: profile.id))
         
         let startHour = profile.schedule.startTime.hour ?? 0
         let startMinute = profile.schedule.startTime.minute ?? 0
@@ -413,6 +416,10 @@ class ProfileManager: ObservableObject {
             }
         } else if activeProfileId != nil {
             let previousId = activeProfileId
+            // Clear the extension's named store for this profile
+            if let prevId = previousId {
+                clearExtensionStore(for: prevId)
+            }
             activeProfileId = nil
             saveActiveState()
             SharedDefaults.saveActiveState(profile: nil)
@@ -429,6 +436,15 @@ class ProfileManager: ObservableObject {
         } else {
             UserDefaults.standard.removeObject(forKey: activeProfileKey)
         }
+    }
+    
+    /// Clear the extension's named ManagedSettingsStore for a profile.
+    /// This ensures manual deactivation (temporary unlock, standard disable)
+    /// also removes shields that the DeviceActivityMonitor extension applied.
+    private func clearExtensionStore(for profileId: UUID) {
+        let store = ManagedSettingsStore(named: .init(rawValue: SharedDefaults.activityRawValue(for: profileId)))
+        store.clearAllSettings()
+        print("[ProfileManager] Cleared extension store for profile: \(profileId.uuidString)")
     }
     
     func getTimeUntilNextChange() -> String? {

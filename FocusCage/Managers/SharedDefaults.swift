@@ -11,9 +11,35 @@ class SharedDefaults {
     static let activeProfileIconKey = "shared_active_profile_icon"
     static let activeProfileColorKey = "shared_active_profile_color"
     static let activeStrictnessKey = "shared_active_strictness"
+
+    static let monitorLastEventKey = "shared_monitor_last_event"
+    static let monitorLastActivityKey = "shared_monitor_last_activity"
+    static let monitorLastTimestampKey = "shared_monitor_last_timestamp"
     
     static var sharedDefaults: UserDefaults? {
         UserDefaults(suiteName: appGroup)
+    }
+
+    static func activityRawValue(for profileId: UUID) -> String {
+        "profile_" + profileId.uuidString.replacingOccurrences(of: "-", with: "")
+    }
+
+    static func saveMonitorEvent(event: String, activity: String, date: Date = Date()) {
+        guard let defaults = sharedDefaults else { return }
+        defaults.set(event, forKey: monitorLastEventKey)
+        defaults.set(activity, forKey: monitorLastActivityKey)
+        defaults.set(date.timeIntervalSince1970, forKey: monitorLastTimestampKey)
+    }
+
+    static func loadLastMonitorEvent() -> (event: String, activity: String, date: Date)? {
+        guard let defaults = sharedDefaults,
+              let event = defaults.string(forKey: monitorLastEventKey),
+              let activity = defaults.string(forKey: monitorLastActivityKey) else {
+            return nil
+        }
+        let ts = defaults.double(forKey: monitorLastTimestampKey)
+        guard ts > 0 else { return nil }
+        return (event: event, activity: activity, date: Date(timeIntervalSince1970: ts))
     }
     
     // MARK: - Active State (for Widget)
