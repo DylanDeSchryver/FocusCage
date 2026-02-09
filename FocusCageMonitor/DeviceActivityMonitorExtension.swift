@@ -3,6 +3,19 @@ import ManagedSettings
 import FamilyControls
 import Foundation
 import WidgetKit
+import ActivityKit
+
+struct FocusCageWidgetAttributes: ActivityAttributes {
+    public struct ContentState: Codable, Hashable {
+        var remainingMinutes: Int
+        var isLocked: Bool
+    }
+
+    var profileName: String
+    var profileIcon: String
+    var profileColorHex: String
+    var endTime: Date
+}
 
 class FocusCageMonitor: DeviceActivityMonitor {
     
@@ -59,6 +72,8 @@ class FocusCageMonitor: DeviceActivityMonitor {
         // Update shared state so the widget reflects the active session
         SharedDefaults.saveActiveState(profile: profile)
         WidgetCenter.shared.reloadAllTimelines()
+
+        startLiveActivity(for: profile)
     }
     
     override func intervalDidEnd(for activity: DeviceActivityName) {
@@ -90,6 +105,8 @@ class FocusCageMonitor: DeviceActivityMonitor {
             ManagedSettingsStore().clearAllSettings()
             SharedDefaults.saveActiveState(profile: nil)
             print("[FocusCageMonitor] No active profiles, cleared Default Store")
+
+            Task { await endLiveActivities() }
         } else if activeProfiles.count == 1, let activeProfile = activeProfiles.first {
             // Exactly one active -> Promote to Default Store
             let otherActivity = DeviceActivityName(SharedDefaults.activityRawValue(for: activeProfile.id))
@@ -97,6 +114,8 @@ class FocusCageMonitor: DeviceActivityMonitor {
             applyBlockingToDefaultStore(for: activeProfile) // Ensure default is set
             SharedDefaults.saveActiveState(profile: activeProfile)
             print("[FocusCageMonitor] One remaining profile active: \(activeProfile.name) (Applied to Default)")
+
+            startLiveActivity(for: activeProfile)
         } else {
             // Multiple active -> Clear Default, ensure Named are set
             ManagedSettingsStore().clearAllSettings()
@@ -108,11 +127,76 @@ class FocusCageMonitor: DeviceActivityMonitor {
             // Pick one for the widget state (e.g. first)
             if let first = activeProfiles.first {
                 SharedDefaults.saveActiveState(profile: first)
+                startLiveActivity(for: first)
             }
             print("[FocusCageMonitor] Multiple remaining profiles, cleared Default Store")
         }
         
         WidgetCenter.shared.reloadAllTimelines()
+    }
+
+    private func startLiveActivity(for profile: FocusProfile) {
+        guard ActivityAuthorizationInfo().areActivitiesEnabled else {
+            print("[FocusCageMonitor] Live Activities not enabled")
+            return
+        }
+
+        Task {
+            await endLiveActivities()
+
+            let now = Date()
+            let endTime = liveActivityEndTime(for: profile, now: now)
+            let remainingMinutes = max(0, Int(endTime.timeIntervalSince(now) / 60))
+
+            let attributes = FocusCageWidgetAttributes(
+                profileName: profile.name,
+                profileIcon: profile.iconName,
+                profileColorHex: profile.color.rawValue,
+                endTime: endTime
+            )
+
+            let state = FocusCageWidgetAttributes.ContentState(
+                remainingMinutes: remainingMinutes,
+                isLocked: profile.strictnessLevel == .locked
+            )
+
+            let content = ActivityContent(state: state, staleDate: endTime)
+
+            do {
+                _ = try Activity.request(attributes: attributes, content: content, pushType: nil)
+                print("[FocusCageMonitor] Live Activity started for '\(profile.name)'")
+            } catch {
+                print("[FocusCageMonitor] Failed to start Live Activity: \(error)")
+            }
+        }
+    }
+
+    private func endLiveActivities() async {
+        for activity in Activity<FocusCageWidgetAttributes>.activities {
+            let finalState = FocusCageWidgetAttributes.ContentState(remainingMinutes: 0, isLocked: false)
+            await activity.end(ActivityContent(state: finalState, staleDate: nil), dismissalPolicy: .immediate)
+        }
+        print("[FocusCageMonitor] Live Activities ended")
+    }
+
+    private func liveActivityEndTime(for profile: FocusProfile, now: Date) -> Date {
+        let calendar = Calendar.current
+        let endHour = profile.schedule.endTime.hour ?? 0
+        let endMinute = profile.schedule.endTime.minute ?? 0
+
+        var endComponents = calendar.dateComponents([.year, .month, .day], from: now)
+        endComponents.hour = endHour
+        endComponents.minute = endMinute
+
+        let endDate = calendar.date(from: endComponents) ?? now
+
+        // If schedule crosses midnight and our computed end is already in the past,
+        // bump to the next day.
+        if endDate <= now {
+            return calendar.date(byAdding: .day, value: 1, to: endDate) ?? endDate
+        }
+
+        return endDate
     }
     
     private func applyBlocking(for profile: FocusProfile, activity: DeviceActivityName) {

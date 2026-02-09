@@ -95,6 +95,92 @@ struct WidgetData {
         let date = calendar.date(from: components) ?? now
         return (name: next.name, startTime: formatter.string(from: date))
     }
+
+    static func loadNextSession(now: Date = Date()) -> (startDate: Date, data: WidgetData)? {
+        let defaults = UserDefaults(suiteName: "group.com.focuscage.app")
+        guard let data = defaults?.data(forKey: "shared_focuscage_profiles") else { return nil }
+
+        struct MinimalProfile: Codable {
+            let name: String
+            let iconName: String
+            let color: String
+            let strictnessLevel: String
+            let isEnabled: Bool
+            let schedule: MinimalSchedule
+        }
+        struct MinimalSchedule: Codable {
+            let startTime: DateComponents
+            let endTime: DateComponents
+            let activeDays: Set<Int>
+        }
+
+        guard let profiles = try? JSONDecoder().decode([MinimalProfile].self, from: data) else { return nil }
+
+        let enabled = profiles.filter { $0.isEnabled }
+        guard !enabled.isEmpty else { return nil }
+
+        let calendar = Calendar.current
+        let startOfToday = calendar.startOfDay(for: now)
+
+        var best: (startDate: Date, endDate: Date, profile: MinimalProfile)?
+
+        for profile in enabled {
+            let startHour = profile.schedule.startTime.hour ?? 0
+            let startMinute = profile.schedule.startTime.minute ?? 0
+            let endHour = profile.schedule.endTime.hour ?? 0
+            let endMinute = profile.schedule.endTime.minute ?? 0
+
+            for dayOffset in 0..<7 {
+                guard let day = calendar.date(byAdding: .day, value: dayOffset, to: startOfToday) else { continue }
+                let weekday = calendar.component(.weekday, from: day)
+                guard profile.schedule.activeDays.contains(weekday) else { continue }
+
+                var startComponents = calendar.dateComponents([.year, .month, .day], from: day)
+                startComponents.hour = startHour
+                startComponents.minute = startMinute
+                guard let startDate = calendar.date(from: startComponents) else { continue }
+
+                var endComponents = calendar.dateComponents([.year, .month, .day], from: day)
+                endComponents.hour = endHour
+                endComponents.minute = endMinute
+                var endDate = calendar.date(from: endComponents) ?? startDate
+                if endDate <= startDate {
+                    endDate = calendar.date(byAdding: .day, value: 1, to: endDate) ?? endDate
+                }
+
+                if startDate <= now, now < endDate {
+                    best = (startDate: startDate, endDate: endDate, profile: profile)
+                    break
+                }
+
+                guard startDate > now else { continue }
+
+                if let currentBest = best {
+                    if startDate < currentBest.startDate {
+                        best = (startDate: startDate, endDate: endDate, profile: profile)
+                    }
+                } else {
+                    best = (startDate: startDate, endDate: endDate, profile: profile)
+                }
+            }
+
+            if let currentBest = best, currentBest.startDate <= now, now < currentBest.endDate {
+                break
+            }
+        }
+
+        guard let session = best else { return nil }
+
+        let widgetData = WidgetData(
+            profileName: session.profile.name,
+            profileIcon: session.profile.iconName,
+            profileColor: session.profile.color,
+            strictness: session.profile.strictnessLevel,
+            endDate: session.endDate
+        )
+
+        return (startDate: session.startDate, data: widgetData)
+    }
 }
 
 // MARK: - Timeline Provider
@@ -110,32 +196,38 @@ struct FocusCageProvider: TimelineProvider {
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<FocusCageEntry>) -> ()) {
-        let data = WidgetData.load()
-        var entries: [FocusCageEntry] = []
-        
         let now = Date()
-        entries.append(FocusCageEntry(date: now, data: data))
-        
-        // If active, add an entry for when the session ends
-        if let endDate = data.endDate, endDate > now {
-            // Add minute-by-minute updates for countdown
-            let minutesRemaining = Int(endDate.timeIntervalSince(now) / 60)
-            let updateInterval = max(1, min(minutesRemaining, 15))
-            
-            for i in 1...min(updateInterval, 60) {
-                if let updateDate = Calendar.current.date(byAdding: .minute, value: i, to: now) {
-                    entries.append(FocusCageEntry(date: updateDate, data: data))
-                }
-            }
-            
-            // Entry after session ends
+        let loaded = WidgetData.load()
+        var entries: [FocusCageEntry] = []
+
+        entries.append(FocusCageEntry(date: now, data: loaded))
+
+        if let endDate = loaded.endDate, endDate > now {
             let expiredData = WidgetData(profileName: nil, profileIcon: nil, profileColor: nil, strictness: nil, endDate: nil)
             entries.append(FocusCageEntry(date: endDate, data: expiredData))
+            completion(Timeline(entries: entries, policy: .atEnd))
+            return
         }
-        
-        let policy: TimelineReloadPolicy = data.isActive ? .after(Date().addingTimeInterval(60)) : .after(Date().addingTimeInterval(300))
-        let timeline = Timeline(entries: entries, policy: policy)
-        completion(timeline)
+
+        if let next = WidgetData.loadNextSession(now: now) {
+            if next.startDate <= now {
+                entries[0] = FocusCageEntry(date: now, data: next.data)
+                if let endDate = next.data.endDate, endDate > now {
+                    let expiredData = WidgetData(profileName: nil, profileIcon: nil, profileColor: nil, strictness: nil, endDate: nil)
+                    entries.append(FocusCageEntry(date: endDate, data: expiredData))
+                }
+            } else {
+                entries.append(FocusCageEntry(date: next.startDate, data: next.data))
+                if let endDate = next.data.endDate, endDate > next.startDate {
+                    let expiredData = WidgetData(profileName: nil, profileIcon: nil, profileColor: nil, strictness: nil, endDate: nil)
+                    entries.append(FocusCageEntry(date: endDate, data: expiredData))
+                }
+            }
+            completion(Timeline(entries: entries, policy: .atEnd))
+            return
+        }
+
+        completion(Timeline(entries: entries, policy: .after(now.addingTimeInterval(300))))
     }
 }
 
