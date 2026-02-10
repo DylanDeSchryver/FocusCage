@@ -3,6 +3,7 @@ import FamilyControls
 import BackgroundTasks
 import ManagedSettings
 import WidgetKit
+import ActivityKit
 
 @main
 struct FocusCageApp: App {
@@ -85,6 +86,8 @@ struct FocusCageApp: App {
     static func handleBackgroundRefresh() async {
         let profiles = SharedDefaults.loadProfiles()
         let store = ManagedSettingsStore()
+
+        SharedDefaults.refreshUpcomingSessions(from: profiles)
         
         let activeProfile = profiles.first { profile in
             guard profile.isEnabled else { return false }
@@ -116,9 +119,48 @@ struct FocusCageApp: App {
             print("[FocusCageApp] Background refresh: no active profile, blocking cleared")
         }
         
+        SharedDefaults.saveWidgetReloadEvent(source: "app_bg_refresh")
         WidgetCenter.shared.reloadAllTimelines()
+
+        await ensurePersistentLiveActivity(profiles: profiles)
         
         // Schedule next refresh
         scheduleBackgroundRefresh()
+    }
+
+    static func ensurePersistentLiveActivity(profiles: [FocusProfile]) async {
+        guard ActivityAuthorizationInfo().areActivitiesEnabled else {
+            SharedDefaults.saveLiveActivityEvent(event: "disabled")
+            return
+        }
+
+        guard Activity<FocusCageWidgetAttributes>.activities.isEmpty else {
+            return
+        }
+
+        SharedDefaults.saveLiveActivityEvent(event: "start_attempt", message: "bg_persistent")
+
+        let now = Date()
+        let firstEnabled = profiles.first(where: { $0.isEnabled })
+        let attributes = FocusCageWidgetAttributes(
+            profileName: firstEnabled?.name ?? "FocusCage",
+            profileIcon: firstEnabled?.iconName ?? "lock.shield.fill",
+            profileColorHex: firstEnabled?.color.rawValue ?? "indigo",
+            endTime: now.addingTimeInterval(60 * 60)
+        )
+
+        let state = FocusCageWidgetAttributes.ContentState(
+            remainingMinutes: 0,
+            isLocked: false
+        )
+
+        let content = ActivityContent(state: state, staleDate: now.addingTimeInterval(7 * 24 * 60 * 60))
+
+        do {
+            let _ = try Activity.request(attributes: attributes, content: content, pushType: nil)
+            SharedDefaults.saveLiveActivityEvent(event: "start_success", message: "bg_persistent")
+        } catch {
+            SharedDefaults.saveLiveActivityEvent(event: "start_error", message: "\(error)")
+        }
     }
 }

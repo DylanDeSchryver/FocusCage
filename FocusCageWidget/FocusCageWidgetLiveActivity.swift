@@ -18,102 +18,200 @@ struct FocusCageWidgetLiveActivity: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: FocusCageWidgetAttributes.self) { context in
             // Lock Screen / Banner UI
-            HStack(spacing: 16) {
-                ZStack {
-                    Circle()
-                        .fill(color(from: context.attributes.profileColorHex).opacity(0.2))
-                        .frame(width: 44, height: 44)
-                    
-                    Image(systemName: context.attributes.profileIcon)
-                        .font(.title3)
-                        .foregroundStyle(color(from: context.attributes.profileColorHex))
-                }
-                
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(context.attributes.profileName)
-                        .font(.subheadline)
-                        .fontWeight(.semibold)
-                    
-                    HStack(spacing: 4) {
-                        Image(systemName: context.state.isLocked ? "lock.fill" : "shield.fill")
-                            .font(.caption2)
-                        Text(context.state.isLocked ? "Locked" : "Strict")
-                            .font(.caption)
+            TimelineView(.periodic(from: Date(), by: 30)) { _ in
+                let active = AppGroupState.loadActiveState()
+                let next = AppGroupState.loadNextState()
+                let name = active?.name ?? next?.name ?? context.attributes.profileName
+                let icon = active?.icon ?? next?.icon ?? context.attributes.profileIcon
+                let colorHex = active?.colorHex ?? next?.colorHex ?? context.attributes.profileColorHex
+                let strictness = active?.strictness ?? next?.strictness
+                let endDate = active?.endDate
+                let startDate = next?.startDate
+
+                HStack(spacing: 16) {
+                    ZStack {
+                        Circle()
+                            .fill(color(from: colorHex).opacity(0.2))
+                            .frame(width: 44, height: 44)
+
+                        Image(systemName: icon)
+                            .font(.title3)
+                            .foregroundStyle(color(from: colorHex))
                     }
-                    .foregroundStyle(.secondary)
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(name)
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+
+                        if let strictness {
+                            HStack(spacing: 4) {
+                                Image(systemName: strictness.icon)
+                                    .font(.caption2)
+                                Text(strictness.label)
+                                    .font(.caption)
+                            }
+                            .foregroundStyle(.secondary)
+                        } else {
+                            Text("Not Active")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+
+                    Spacer()
+
+                    VStack(alignment: .trailing, spacing: 4) {
+                        if let endDate {
+                            Text(endDate, style: .timer)
+                                .font(.system(.title2, design: .rounded))
+                                .fontWeight(.bold)
+                                .monospacedDigit()
+                                .foregroundStyle(color(from: colorHex))
+
+                            Text("Ends \(endDate, style: .time)")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        } else if let startDate {
+                            Text(startDate, style: .timer)
+                                .font(.system(.title2, design: .rounded))
+                                .fontWeight(.bold)
+                                .monospacedDigit()
+                                .foregroundStyle(color(from: colorHex))
+
+                            Text("Starts \(startDate, style: .time)")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        } else {
+                            Text("—")
+                                .font(.system(.title2, design: .rounded))
+                                .fontWeight(.bold)
+                                .monospacedDigit()
+                                .foregroundStyle(color(from: colorHex))
+
+                            Text("No Schedule")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
                 }
-                
-                Spacer()
-                
-                VStack(alignment: .trailing, spacing: 4) {
-                    Text(context.attributes.endTime, style: .timer)
-                        .font(.system(.title2, design: .rounded))
-                        .fontWeight(.bold)
-                        .monospacedDigit()
-                        .foregroundStyle(color(from: context.attributes.profileColorHex))
-                    
-                    Text("Ends \(context.attributes.endTime, style: .time)")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
+                .padding()
+                .activityBackgroundTint(Color(.systemBackground))
+                .activitySystemActionForegroundColor(color(from: colorHex))
             }
-            .padding()
-            .activityBackgroundTint(Color(.systemBackground))
-            .activitySystemActionForegroundColor(color(from: context.attributes.profileColorHex))
 
         } dynamicIsland: { context in
             DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
-                    HStack(spacing: 6) {
-                        Image(systemName: context.attributes.profileIcon)
-                            .font(.subheadline)
-                            .foregroundStyle(color(from: context.attributes.profileColorHex))
-                        
-                        Text(context.attributes.profileName)
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
-                            .lineLimit(1)
+                    TimelineView(.periodic(from: Date(), by: 30)) { _ in
+                        let active = AppGroupState.loadActiveState()
+                        let next = AppGroupState.loadNextState()
+                        let name = active?.name ?? next?.name ?? context.attributes.profileName
+                        let icon = active?.icon ?? next?.icon ?? context.attributes.profileIcon
+                        let colorHex = active?.colorHex ?? next?.colorHex ?? context.attributes.profileColorHex
+
+                        HStack(spacing: 6) {
+                            Image(systemName: icon)
+                                .font(.subheadline)
+                                .foregroundStyle(color(from: colorHex))
+
+                            Text(name)
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                                .lineLimit(1)
+                        }
                     }
                 }
                 DynamicIslandExpandedRegion(.trailing) {
-                    VStack(alignment: .trailing, spacing: 2) {
-                        HStack(spacing: 4) {
-                            Image(systemName: context.state.isLocked ? "lock.fill" : "shield.fill")
-                                .font(.caption2)
-                            Text(context.state.isLocked ? "Locked" : "Strict")
-                                .font(.caption)
-                        }
-                        .foregroundStyle(context.state.isLocked ? .red : .orange)
+                    TimelineView(.periodic(from: Date(), by: 30)) { _ in
+                        let active = AppGroupState.loadActiveState()
+                        let next = AppGroupState.loadNextState()
+                        let colorHex = active?.colorHex ?? next?.colorHex ?? context.attributes.profileColorHex
+                        let strictness = active?.strictness ?? next?.strictness
+                        let endDate = active?.endDate
+                        let startDate = next?.startDate
 
-                        Text(context.attributes.endTime, style: .timer)
-                            .font(.system(.subheadline, design: .rounded))
-                            .fontWeight(.semibold)
-                            .monospacedDigit()
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.8)
-                            .foregroundStyle(color(from: context.attributes.profileColorHex))
+                        VStack(alignment: .trailing, spacing: 2) {
+                            if let strictness {
+                                HStack(spacing: 4) {
+                                    Image(systemName: strictness.icon)
+                                        .font(.caption2)
+                                    Text(strictness.label)
+                                        .font(.caption)
+                                }
+                                .foregroundStyle(strictness.isLocked ? .red : .orange)
+                            }
+
+                            if let endDate {
+                                Text(endDate, style: .timer)
+                                    .font(.system(.subheadline, design: .rounded))
+                                    .fontWeight(.semibold)
+                                    .monospacedDigit()
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.8)
+                                    .foregroundStyle(color(from: colorHex))
+                            } else if let startDate {
+                                Text(startDate, style: .timer)
+                                    .font(.system(.subheadline, design: .rounded))
+                                    .fontWeight(.semibold)
+                                    .monospacedDigit()
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.8)
+                                    .foregroundStyle(color(from: colorHex))
+                            }
+                        }
                     }
                 }
             } compactLeading: {
-                Image(systemName: "lock.shield.fill")
-                    .font(.subheadline)
-                    .foregroundStyle(color(from: context.attributes.profileColorHex))
+                TimelineView(.periodic(from: Date(), by: 30)) { _ in
+                    let active = AppGroupState.loadActiveState()
+                    let next = AppGroupState.loadNextState()
+                    let colorHex = active?.colorHex ?? next?.colorHex ?? context.attributes.profileColorHex
+                    let icon = active?.icon ?? next?.icon ?? "lock.shield.fill"
+
+                    Image(systemName: icon)
+                        .font(.subheadline)
+                        .foregroundStyle(color(from: colorHex))
+                }
             } compactTrailing: {
-                Text(context.attributes.endTime, style: .timer)
+                TimelineView(.periodic(from: Date(), by: 30)) { _ in
+                    let active = AppGroupState.loadActiveState()
+                    let next = AppGroupState.loadNextState()
+                    let colorHex = active?.colorHex ?? next?.colorHex ?? context.attributes.profileColorHex
+                    let endDate = active?.endDate
+                    let startDate = next?.startDate
+
+                    Group {
+                        if let endDate {
+                            Text(endDate, style: .timer)
+                        } else if let startDate {
+                            Text(startDate, style: .timer)
+                        } else {
+                            Text("—")
+                        }
+                    }
                     .font(.system(.caption, design: .rounded))
                     .fontWeight(.semibold)
                     .monospacedDigit()
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
                     .frame(width: 56, alignment: .trailing)
-                    .foregroundStyle(color(from: context.attributes.profileColorHex))
+                    .foregroundStyle(color(from: colorHex))
+                }
             } minimal: {
-                Image(systemName: "lock.shield.fill")
-                    .font(.caption)
-                    .foregroundStyle(color(from: context.attributes.profileColorHex))
+                TimelineView(.periodic(from: Date(), by: 30)) { _ in
+                    let active = AppGroupState.loadActiveState()
+                    let next = AppGroupState.loadNextState()
+                    let colorHex = active?.colorHex ?? next?.colorHex ?? context.attributes.profileColorHex
+                    let icon = active?.icon ?? next?.icon ?? "lock.shield.fill"
+
+                    Image(systemName: icon)
+                        .font(.caption)
+                        .foregroundStyle(color(from: colorHex))
+                }
             }
             .widgetURL(URL(string: "focuscage://active"))
-            .keylineTint(color(from: context.attributes.profileColorHex))
+            .keylineTint(color(from: AppGroupState.loadActiveState()?.colorHex ?? AppGroupState.loadNextState()?.colorHex ?? context.attributes.profileColorHex))
         }
     }
     
@@ -132,6 +230,101 @@ struct FocusCageWidgetLiveActivity: Widget {
         case "pink": return .pink
         default: return .indigo
         }
+    }
+}
+
+private enum AppGroupState {
+    static let suiteName = "group.com.focuscage.app"
+
+    struct ActiveState {
+        let name: String
+        let icon: String
+        let colorHex: String
+        let strictness: Strictness
+        let endDate: Date
+    }
+
+    struct NextState {
+        let name: String
+        let icon: String
+        let colorHex: String
+        let strictness: Strictness
+        let startDate: Date
+        let endDate: Date
+    }
+
+    struct Strictness {
+        let rawValue: String
+        var isLocked: Bool { rawValue == "locked" }
+        var label: String {
+            switch rawValue {
+            case "locked": return "Locked"
+            case "strict": return "Strict"
+            case "standard": return "Standard"
+            default: return rawValue
+            }
+        }
+        var icon: String {
+            switch rawValue {
+            case "locked": return "lock.fill"
+            case "strict": return "shield.fill"
+            case "standard": return "lock.open.fill"
+            default: return "lock.shield.fill"
+            }
+        }
+    }
+
+    static func defaults() -> UserDefaults? {
+        UserDefaults(suiteName: suiteName)
+    }
+
+    static func loadActiveState(now: Date = Date()) -> ActiveState? {
+        guard let defaults = defaults(),
+              let name = defaults.string(forKey: "shared_active_profile_name"),
+              let icon = defaults.string(forKey: "shared_active_profile_icon"),
+              let colorHex = defaults.string(forKey: "shared_active_profile_color"),
+              let strictnessRaw = defaults.string(forKey: "shared_active_strictness") else {
+            return nil
+        }
+
+        let endTs = defaults.double(forKey: "shared_active_end_time")
+        guard endTs > 0 else { return nil }
+        let endDate = Date(timeIntervalSince1970: endTs)
+        guard endDate > now else { return nil }
+
+        return ActiveState(
+            name: name,
+            icon: icon,
+            colorHex: colorHex,
+            strictness: Strictness(rawValue: strictnessRaw),
+            endDate: endDate
+        )
+    }
+
+    static func loadNextState(now: Date = Date()) -> NextState? {
+        guard let defaults = defaults(),
+              let name = defaults.string(forKey: "shared_next_profile_name"),
+              let icon = defaults.string(forKey: "shared_next_profile_icon"),
+              let colorHex = defaults.string(forKey: "shared_next_profile_color"),
+              let strictnessRaw = defaults.string(forKey: "shared_next_profile_strictness") else {
+            return nil
+        }
+
+        let startTs = defaults.double(forKey: "shared_next_profile_start_time")
+        let endTs = defaults.double(forKey: "shared_next_profile_end_time")
+        guard startTs > 0, endTs > 0 else { return nil }
+        let startDate = Date(timeIntervalSince1970: startTs)
+        let endDate = Date(timeIntervalSince1970: endTs)
+        guard endDate > now else { return nil }
+
+        return NextState(
+            name: name,
+            icon: icon,
+            colorHex: colorHex,
+            strictness: Strictness(rawValue: strictnessRaw),
+            startDate: startDate,
+            endDate: endDate
+        )
     }
 }
 

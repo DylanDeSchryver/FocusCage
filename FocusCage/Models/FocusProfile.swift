@@ -116,11 +116,6 @@ struct ProfileSchedule: Codable, Equatable {
         let now = Date()
         let currentWeekday = calendar.component(.weekday, from: now)
         
-        guard let weekday = Weekday(rawValue: currentWeekday),
-              activeDays.contains(weekday) else {
-            return false
-        }
-        
         let currentHour = calendar.component(.hour, from: now)
         let currentMinute = calendar.component(.minute, from: now)
         let currentTotalMinutes = currentHour * 60 + currentMinute
@@ -132,8 +127,36 @@ struct ProfileSchedule: Codable, Equatable {
         let endHour = endTime.hour ?? 0
         let endMinute = endTime.minute ?? 0
         let endTotalMinutes = endHour * 60 + endMinute
-        
-        return currentTotalMinutes >= startTotalMinutes && currentTotalMinutes < endTotalMinutes
+
+        let crossesMidnight = startTotalMinutes > endTotalMinutes
+
+        if !crossesMidnight {
+            guard let weekday = Weekday(rawValue: currentWeekday),
+                  activeDays.contains(weekday) else {
+                return false
+            }
+            return currentTotalMinutes >= startTotalMinutes && currentTotalMinutes < endTotalMinutes
+        }
+
+        let isOnOrAfterStartToday: Bool = {
+            guard let weekday = Weekday(rawValue: currentWeekday),
+                  activeDays.contains(weekday) else {
+                return false
+            }
+            return currentTotalMinutes >= startTotalMinutes
+        }()
+
+        let isBeforeEndYesterday: Bool = {
+            guard let yesterday = calendar.date(byAdding: .day, value: -1, to: now) else { return false }
+            let yesterdayWeekday = calendar.component(.weekday, from: yesterday)
+            guard let weekday = Weekday(rawValue: yesterdayWeekday),
+                  activeDays.contains(weekday) else {
+                return false
+            }
+            return currentTotalMinutes < endTotalMinutes
+        }()
+
+        return isOnOrAfterStartToday || isBeforeEndYesterday
     }
 }
 

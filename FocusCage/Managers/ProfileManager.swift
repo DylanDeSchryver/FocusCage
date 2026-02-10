@@ -29,6 +29,7 @@ class ProfileManager: ObservableObject {
         loadNuclearState()
         startScheduleMonitor()
         scheduleAllProfiles()
+        startLiveActivityIfNeeded()
     }
     
     deinit {
@@ -55,6 +56,7 @@ class ProfileManager: ObservableObject {
         
         // Always sync to shared storage for the extension
         SharedDefaults.saveProfiles(profiles)
+        SharedDefaults.refreshUpcomingSessions(from: profiles)
     }
     
     func saveProfiles() {
@@ -73,6 +75,7 @@ class ProfileManager: ObservableObject {
         
         // Sync to shared storage for the extension
         SharedDefaults.saveProfiles(profiles)
+        SharedDefaults.refreshUpcomingSessions(from: profiles)
         
         // Re-schedule all profiles when data changes
         scheduleAllProfiles()
@@ -394,8 +397,9 @@ class ProfileManager: ObservableObject {
                 saveActiveState()
                 if let profile = profiles.first(where: { $0.id == nuclearId }) {
                     SharedDefaults.saveActiveState(profile: profile)
+                    SharedDefaults.saveWidgetReloadEvent(source: "app_checkSchedules_nuclear")
                     WidgetCenter.shared.reloadAllTimelines()
-                    startLiveActivity(for: profile)
+                    startLiveActivityIfNeeded()
                     NotificationCenter.default.post(name: .profileActivated, object: profile)
                 }
             }
@@ -409,8 +413,9 @@ class ProfileManager: ObservableObject {
                 activeProfileId = firstActive.id
                 saveActiveState()
                 SharedDefaults.saveActiveState(profile: firstActive)
+                SharedDefaults.saveWidgetReloadEvent(source: "app_checkSchedules_activated")
                 WidgetCenter.shared.reloadAllTimelines()
-                startLiveActivity(for: firstActive)
+                startLiveActivityIfNeeded()
                 NotificationCenter.default.post(name: .profileActivated, object: firstActive)
                 print("[ProfileManager] Profile activated: \(firstActive.name)")
             }
@@ -423,10 +428,15 @@ class ProfileManager: ObservableObject {
             activeProfileId = nil
             saveActiveState()
             SharedDefaults.saveActiveState(profile: nil)
+            SharedDefaults.saveWidgetReloadEvent(source: "app_checkSchedules_deactivated")
             WidgetCenter.shared.reloadAllTimelines()
-            endLiveActivity()
             NotificationCenter.default.post(name: .profileDeactivated, object: previousId)
             print("[ProfileManager] Profile deactivated")
+        } else {
+            // Between sessions: still refresh widget so it can show the next scheduled session.
+            SharedDefaults.saveActiveState(profile: nil)
+            SharedDefaults.saveWidgetReloadEvent(source: "app_checkSchedules_between")
+            WidgetCenter.shared.reloadAllTimelines()
         }
     }
     
@@ -476,66 +486,133 @@ class ProfileManager: ObservableObject {
     }
     
     // MARK: - Live Activities
-    
+
+    private func startLiveActivityIfNeeded() {
+        guard ActivityAuthorizationInfo().areActivitiesEnabled else {
+            print("[ProfileManager] Live Activities not enabled")
+            SharedDefaults.saveLiveActivityEvent(event: "disabled")
+            return
+        }
+
+        Task {
+            let activities = Activity<FocusCageWidgetAttributes>.activities
+            if activities.count == 1 {
+                return
+            }
+            if activities.count > 1 {
+                await endLiveActivities()
+            }
+
+            SharedDefaults.saveLiveActivityEvent(event: "start_attempt", message: "persistent")
+
+            let now = Date()
+            let firstEnabled = profiles.first(where: { $0.isEnabled })
+            let attributes = FocusCageWidgetAttributes(
+                profileName: firstEnabled?.name ?? "FocusCage",
+                profileIcon: firstEnabled?.iconName ?? "lock.shield.fill",
+                profileColorHex: firstEnabled?.color.rawValue ?? "indigo",
+                endTime: now.addingTimeInterval(60 * 60)
+            )
+
+            let state = FocusCageWidgetAttributes.ContentState(
+                remainingMinutes: 0,
+                isLocked: false
+            )
+
+            let content = ActivityContent(state: state, staleDate: now.addingTimeInterval(7 * 24 * 60 * 60))
+
+            do {
+                let _ = try Activity.request(
+                    attributes: attributes,
+                    content: content,
+                    pushType: nil
+                )
+                print("[ProfileManager] Live Activity started (persistent)")
+                SharedDefaults.saveLiveActivityEvent(event: "start_success", message: "persistent")
+            } catch {
+                print("[ProfileManager] Failed to start Live Activity: \(error)")
+                SharedDefaults.saveLiveActivityEvent(event: "start_error", message: "\(error)")
+            }
+        }
+    }
+
     private func startLiveActivity(for profile: FocusProfile) {
         guard ActivityAuthorizationInfo().areActivitiesEnabled else {
             print("[ProfileManager] Live Activities not enabled")
+            SharedDefaults.saveLiveActivityEvent(event: "disabled")
             return
         }
-        
-        // End any existing activity first
-        endLiveActivity()
-        
-        let calendar = Calendar.current
-        let now = Date()
-        let endHour = profile.schedule.endTime.hour ?? 0
-        let endMinute = profile.schedule.endTime.minute ?? 0
-        var endComponents = calendar.dateComponents([.year, .month, .day], from: now)
-        endComponents.hour = endHour
-        endComponents.minute = endMinute
-        let endTime = calendar.date(from: endComponents) ?? now
-        
-        let attributes = FocusCageWidgetAttributes(
-            profileName: profile.name,
-            profileIcon: profile.iconName,
-            profileColorHex: profile.color.rawValue,
-            endTime: endTime
-        )
-        
-        let remaining = Int(endTime.timeIntervalSince(now) / 60)
-        let state = FocusCageWidgetAttributes.ContentState(
-            remainingMinutes: remaining,
-            isLocked: profile.strictnessLevel == .locked
-        )
-        
-        let content = ActivityContent(state: state, staleDate: endTime)
-        
-        do {
-            let _ = try Activity.request(
-                attributes: attributes,
-                content: content,
-                pushType: nil
+
+        Task {
+            let activities = Activity<FocusCageWidgetAttributes>.activities
+            if activities.count == 1 {
+                return
+            }
+            if activities.count > 1 {
+                await endLiveActivities()
+            }
+
+            SharedDefaults.saveLiveActivityEvent(event: "start_attempt", message: profile.name)
+
+            let calendar = Calendar.current
+            let now = Date()
+            let endHour = profile.schedule.endTime.hour ?? 0
+            let endMinute = profile.schedule.endTime.minute ?? 0
+            var endComponents = calendar.dateComponents([.year, .month, .day], from: now)
+            endComponents.hour = endHour
+            endComponents.minute = endMinute
+            let rawEndTime = calendar.date(from: endComponents) ?? now
+            let endTime = rawEndTime <= now ? (calendar.date(byAdding: .day, value: 1, to: rawEndTime) ?? rawEndTime) : rawEndTime
+
+            let attributes = FocusCageWidgetAttributes(
+                profileName: profile.name,
+                profileIcon: profile.iconName,
+                profileColorHex: profile.color.rawValue,
+                endTime: endTime
             )
-            print("[ProfileManager] Live Activity started for '\(profile.name)'")
-        } catch {
-            print("[ProfileManager] Failed to start Live Activity: \(error)")
+
+            let remaining = max(0, Int(endTime.timeIntervalSince(now) / 60))
+            let state = FocusCageWidgetAttributes.ContentState(
+                remainingMinutes: remaining,
+                isLocked: profile.strictnessLevel == .locked
+            )
+
+            let content = ActivityContent(state: state, staleDate: endTime)
+
+            do {
+                let _ = try Activity.request(
+                    attributes: attributes,
+                    content: content,
+                    pushType: nil
+                )
+                print("[ProfileManager] Live Activity started for '\(profile.name)'")
+                SharedDefaults.saveLiveActivityEvent(event: "start_success", message: profile.name)
+            } catch {
+                print("[ProfileManager] Failed to start Live Activity: \(error)")
+                SharedDefaults.saveLiveActivityEvent(event: "start_error", message: "\(error)")
+            }
         }
     }
     
     private func endLiveActivity() {
-        Task {
-            for activity in Activity<FocusCageWidgetAttributes>.activities {
-                let finalState = FocusCageWidgetAttributes.ContentState(
-                    remainingMinutes: 0,
-                    isLocked: false
-                )
-                await activity.end(
-                    ActivityContent(state: finalState, staleDate: nil),
-                    dismissalPolicy: .immediate
-                )
-            }
-            print("[ProfileManager] Live Activities ended")
+        Task { await endLiveActivities() }
+    }
+
+    private func endLiveActivities() async {
+        guard !Activity<FocusCageWidgetAttributes>.activities.isEmpty else { return }
+        SharedDefaults.saveLiveActivityEvent(event: "end_attempt")
+        for activity in Activity<FocusCageWidgetAttributes>.activities {
+            let finalState = FocusCageWidgetAttributes.ContentState(
+                remainingMinutes: 0,
+                isLocked: false
+            )
+            await activity.end(
+                ActivityContent(state: finalState, staleDate: nil),
+                dismissalPolicy: .immediate
+            )
         }
+        print("[ProfileManager] Live Activities ended")
+        SharedDefaults.saveLiveActivityEvent(event: "end_success")
     }
 }
 

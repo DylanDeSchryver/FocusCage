@@ -183,16 +183,26 @@ struct SettingsView: View {
 
 struct DiagnosticsAndLogsView: View {
     @State private var lastMonitorEventText: String = ""
+    @State private var lastLiveActivityEventText: String = ""
+    @State private var lastWidgetReloadEventText: String = ""
 
     var body: some View {
         Form {
             monitorSection
+            liveActivitySection
+            widgetReloadSection
         }
         .navigationTitle("Diagnostics & Logs")
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
-            refreshMonitorEvent()
+            refresh()
         }
+    }
+
+    private func refresh() {
+        refreshMonitorEvent()
+        refreshLiveActivityEvent()
+        refreshWidgetReloadEvent()
     }
 
     private func refreshMonitorEvent() {
@@ -206,13 +216,39 @@ struct DiagnosticsAndLogsView: View {
         }
     }
 
+    private func refreshLiveActivityEvent() {
+        if let evt = SharedDefaults.loadLastLiveActivityEvent() {
+            let formatter = DateFormatter()
+            formatter.dateStyle = .none
+            formatter.timeStyle = .medium
+            if let message = evt.message {
+                lastLiveActivityEventText = "\(evt.event): \(message) (\(formatter.string(from: evt.date)))"
+            } else {
+                lastLiveActivityEventText = "\(evt.event) (\(formatter.string(from: evt.date)))"
+            }
+        } else {
+            lastLiveActivityEventText = "No live activity events recorded yet"
+        }
+    }
+
+    private func refreshWidgetReloadEvent() {
+        if let evt = SharedDefaults.loadLastWidgetReloadEvent() {
+            let formatter = DateFormatter()
+            formatter.dateStyle = .none
+            formatter.timeStyle = .medium
+            lastWidgetReloadEventText = "\(evt.source) (\(formatter.string(from: evt.date)))"
+        } else {
+            lastWidgetReloadEventText = "No widget reload recorded yet"
+        }
+    }
+
     private var monitorSection: some View {
         Section {
             HStack {
                 Label("Monitor Extension", systemImage: "waveform.path.ecg")
                 Spacer()
                 Button("Refresh") {
-                    refreshMonitorEvent()
+                    refresh()
                 }
                 .font(.subheadline)
             }
@@ -222,6 +258,26 @@ struct DiagnosticsAndLogsView: View {
                 .foregroundStyle(.secondary)
         } header: {
             Text("Diagnostics")
+        }
+    }
+
+    private var liveActivitySection: some View {
+        Section {
+            Text(lastLiveActivityEventText)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        } header: {
+            Text("Live Activity")
+        }
+    }
+
+    private var widgetReloadSection: some View {
+        Section {
+            Text(lastWidgetReloadEventText)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        } header: {
+            Text("Widget Reload")
         }
     }
 }
